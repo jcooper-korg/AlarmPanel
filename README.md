@@ -16,7 +16,8 @@ I moved the Disarm button from the top button row to the keypad, to the right of
 
 ## Screenshots
 
-
+<img src="https://github.com/jcooper-korg/AlarmPanel/blob/master/Screenshots/Disarmed-not-ready.png?raw=true" width="400">
+<img src="https://github.com/jcooper-korg/AlarmPanel/blob/master/Screenshots/Armed-home.png?raw=true" width="400">
 
 ## Installation
 
@@ -25,6 +26,8 @@ To use this card in Home Assistant:
 * copy the alarm_control_panel-card.js into the www folder in your config folder (create the www folder if necessary)
 * install it as a custom resource in, under Configuration > Lovelace Dashboards > Resources.  Turn on Advanced Mode in your user profile if you can't see the Resources tab.
 * add it into your lovelace view using a Manual card, with type set as `type: 'custom:alarm_control_panel-card'` (see my example config)
+
+<img src="https://github.com/jcooper-korg/AlarmPanel/blob/master/Screenshots/Installation-Resource.png?raw=true" width="400">
 
 
 ## Card configuration options
