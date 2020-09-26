@@ -1,3 +1,20 @@
+// Alarm Control Panel custom card
+// Orignally by Kevin Cooper (no relation) at https://github.com/JumpMaster/custom-lovelace
+// Modified by John S Cooper at https://github.com/jcooper-korg/AlarmPanel
+// customized button appearance and colors, hide keypad when disarmed if !code_arm_required, new confirm_entities config option, etc
+// See example config at https://github.com/jcooper-korg/AlarmPanel/ExampleConfig
+//
+// if confirm_entities is provided, then when disarmed, it will show "Ready" in
+// the status title if all those entities are off, otherwise it'll show "Not Ready".
+// (can customize those strings in the labels config using ready and not_ready)
+//
+// if alarm_control_panel.code_arm_required, the keypad will be hidden when disarmed, regardless of the
+// hide_keypad and auto_hide options.
+//
+// the auto_enter feature only appears to work if the alarm_control_panel.code_arm_required is true
+// and if you use a template to have different codes for disarm/arm.
+// maybe this auto_enter feature should be removed?
+
 class AlarmControlPanelCard extends HTMLElement {
   constructor() {
     super();
@@ -11,6 +28,7 @@ class AlarmControlPanelCard extends HTMLElement {
       'pending': 'mdi:shield-outline',
       'triggered': 'hass:bell-ring',
     }
+    this._entitiesReady = false;
   }
 
   set hass(hass) {
@@ -18,11 +36,14 @@ class AlarmControlPanelCard extends HTMLElement {
 
     if (entity) {
       this.myhass = hass;
+      this.code_arm_required = entity.attributes.code_arm_required;
+
       if(!this.shadowRoot.lastChild) {
         this._createCard(entity);
       }
       if (entity.state != this._state) {
         this._state = entity.state;
+        this._entitiesReady = this._confirmEntitiesReady();
         this._updateCardContent(entity);
       }
     }
@@ -42,7 +63,7 @@ class AlarmControlPanelCard extends HTMLElement {
     content.innerHTML = `
       ${this._actionButtons()}
       ${entity.attributes.code_format ?
-          `<paper-input label='${this._label("ui.card.alarm_control_panel.code")}'
+          `<paper-input id="input-code" label='${this._label("ui.card.alarm_control_panel.code")}'
           type="password"></paper-input>` : ''}
       ${this._keypad(entity)}
     `;
@@ -83,12 +104,20 @@ class AlarmControlPanelCard extends HTMLElement {
     const config = this._config;
 
     const state_str = "state.alarm_control_panel." + this._state;
+    status = this._label(state_str);
+    if (config.confirm_entities && this._state === "disarmed") {
+      if (this._entitiesReady)
+		status = status + " - " + this._label("ready");
+	  else
+		status = status + " - " + this._label("not_ready");
+    }
+    
     if (config.title) {
       card.header = config.title;
-      root.getElementById("state-text").innerHTML = this._label(state_str);
+      root.getElementById("state-text").innerHTML = status;
       root.getElementById("state-text").className = `state ${this._state}`;
     } else {
-      card.header = this._label(state_str);
+      card.header = status;
     }
 
     root.getElementById("state-icon").setAttribute("icon",
@@ -111,6 +140,12 @@ class AlarmControlPanelCard extends HTMLElement {
     const armVisible = (this._state === 'disarmed');
     root.getElementById("arm-actions").style.display = armVisible ? "" : "none";
     root.getElementById("disarm-actions").style.display = armVisible ? "none" : "";
+
+	// hide code and number pad if disarmed, if manual alarm config has code_arm_required=false
+	if (!this.code_arm_required) {
+		root.getElementById("keypad").style.display = armVisible ? "none" : "flex";
+		root.getElementById("input-code").style.display = armVisible ? "none" : "";
+	}
   }
 
   _actionButtons() {
@@ -118,9 +153,6 @@ class AlarmControlPanelCard extends HTMLElement {
     return `
       <div id="arm-actions" class="actions">
         ${this._config.states.map(el => `${this._actionButton(el)}`).join('')}
-      </div>
-      <div id="disarm-actions" class="actions">
-        ${this._actionButton('disarm')}
       </div>`;
   }
 
@@ -150,8 +182,8 @@ class AlarmControlPanelCard extends HTMLElement {
   }
 
   _actionButton(state) {
-    return `<mwc-button outlined id="${state}">
-      ${this._label("ui.card.alarm_control_panel." + state)}</mwc-button>`;
+    return `<button outlined id="${state}">
+      ${this._label("ui.card.alarm_control_panel." + state)}</button>`;
   }
 
   _setupActions() {
@@ -171,13 +203,13 @@ class AlarmControlPanelCard extends HTMLElement {
     }
 
     if (config.auto_enter) {
-      card.querySelectorAll(".actions mwc-button").forEach(element => {
+      card.querySelectorAll(".actions button").forEach(element => {
         element.classList.remove('autoarm');
         if (element.id === this._arm_action || element.id === 'disarm') {
           element.classList.add('autoarm');
         }
         element.addEventListener('click', event => {
-          card.querySelectorAll(".actions mwc-button").forEach(element => {
+          card.querySelectorAll(".actions button").forEach(element => {
             element.classList.remove('autoarm');
           })
           element.classList.add('autoarm');
@@ -185,7 +217,7 @@ class AlarmControlPanelCard extends HTMLElement {
         })
       })
     } else {
-      card.querySelectorAll(".actions mwc-button").forEach(element => {
+      card.querySelectorAll(".actions button").forEach(element => {
         element.addEventListener('click', event => {
           const input = card.querySelector('paper-input');
           const value = input ? input.value : '';
@@ -215,11 +247,15 @@ class AlarmControlPanelCard extends HTMLElement {
     const root = this.shadowRoot;
 
     const input = root.lastChild.querySelector('paper-input');
-    root.querySelectorAll(".pad mwc-button").forEach(element => {
-      if (element.getAttribute('value') === 
+    root.querySelectorAll(".pad button").forEach(element => {
+      if (element.getAttribute('value') ===
         this._label("ui.card.alarm_control_panel.clear_code")) {
         element.addEventListener('click', event => {
           input.value = '';
+        })
+      } else if (element.id === "disarm") {
+       element.addEventListener('click', event => {
+            this._callService("disarm", input.value);
         })
       } else {
         element.addEventListener('click', event => {
@@ -247,11 +283,12 @@ class AlarmControlPanelCard extends HTMLElement {
     if (this._config.hide_keypad || !entity.attributes.code_format) return '';
 
     return `
-      <div class="pad">
+      <div id="keypad" class="pad">
         <div>
           ${this._keypadButton("1", "")}
           ${this._keypadButton("4", "GHI")}
           ${this._keypadButton("7", "PQRS")}
+          ${this._keypadButton(this._label("ui.card.alarm_control_panel.clear_code"), "", "clear")}
         </div>
         <div>
           ${this._keypadButton("2", "ABC")}
@@ -263,27 +300,41 @@ class AlarmControlPanelCard extends HTMLElement {
           ${this._keypadButton("3", "DEF")}
           ${this._keypadButton("6", "MNO")}
           ${this._keypadButton("9", "WXYZ")}
-          ${this._keypadButton(this._label("ui.card.alarm_control_panel.clear_code"), "")}
+          <div id="disarm-actions">${this._actionButton('disarm')}</div>
         </div>
       </div>`
   }
 
-  _keypadButton(button, alpha) {
+  _confirmEntities() {
+    if (this._config.confirm_entities) return '';
+
+
+  }
+
+  _confirmEntitiesReady() {
+    if (!this._config.confirm_entities) return true;
+    for (var i = 0; i < this._config.confirm_entities.length; i++) {
+       if (this.myhass.states[this._config.confirm_entities[i]].state != "off")
+         return false;
+	}
+	return true;
+  }
+
+  _keypadButton(button, alpha, id='') {
     let letterHTML = '';
     if (this._config.display_letters) {
       letterHTML = `<div class='alpha'>${alpha}</div>`
     }
-    return `<mwc-button dense value="${button}">${button}${letterHTML}
-      </mwc-button>`;
+    if (id == '') id = button;
+    return `<button id="${id}" value="${button}">${button}${letterHTML}</button>`;
   }
 
   _style(icon_style, entity) {
     const style = document.createElement('style');
     style.textContent = `
       ha-card {
-        ${(this._config.hide_keypad ||
-	   !entity.attributes.code_format) ? 'padding-bottom: 16px;' : '' }
         position: relative;
+        padding-bottom: 32px;
         --alarm-color-disarmed: var(--label-badge-green);
         --alarm-color-pending: var(--label-badge-yellow);
         --alarm-color-triggered: var(--label-badge-red);
@@ -291,13 +342,14 @@ class AlarmControlPanelCard extends HTMLElement {
         --alarm-color-autoarm: rgba(0, 153, 255, .1);
         --alarm-state-color: var(--alarm-color-armed);
         --base-unit: ${this._config.scale};
+//		font-family: Roboto,sans-serif;
         font-size: calc(var(--base-unit));
         ${icon_style}
       }
       ha-icon {
         color: var(--alarm-state-color);
-	width: 24px;
-	height: 24px;
+	    width: 24px;
+	    height: 24px;
       }
       ha-label-badge-icon {
         --ha-label-badge-color: var(--alarm-state-color);
@@ -399,13 +451,15 @@ class AlarmControlPanelCard extends HTMLElement {
         }
       }
       paper-input {
+        justify-content: center;
         margin: auto;
         max-width: 200px;
-        font-size: calc(var(--base-unit));
+        font-size: calc(var(--base-unit) * 3);
+		font-weight: bold;
       }
       .state {
         margin-left: 20px;
-        font-size: calc(var(--base-unit) * 0.9);
+        font-size: calc(var(--base-unit) * 1);
         position: relative;
         bottom: 16px;
         color: var(--alarm-state-color);
@@ -419,10 +473,38 @@ class AlarmControlPanelCard extends HTMLElement {
         display: flex;
         flex-direction: column;
       }
-      .pad mwc-button {
-        margin-bottom: 10%;
+      .pad button {
         position: relative;
-        padding: calc(var(--base-unit));
+        padding: calc(var(--base-unit)*0.5);
+        font-size: calc(var(--base-unit) * 1.6);
+        font-weight: 700;
+        width: calc(var(--base-unit) * 8);
+        height: calc(var(--base-unit) * 5);
+        margin: 8px;
+        background-color: var(--primary-background-color);
+        border-width: 2px;
+        border-style: solid;
+        border-color: var(--primary-color);
+        border-radius: 4px;
+        #color: var(--primary-color);
+        color: var(--primary-text-color);
+      }
+      .pad button:focus {
+        border-color: var(--dark-primary-color);
+        outline: none;
+      }
+      .pad button#disarm {
+        border-color: var(--primary-text-color);
+        background-color: var(--primary-color);
+        font-size: calc(var(--base-unit) * 1.1);
+      }
+      .pad button#clear {
+        border-color: red;
+        font-size: calc(var(--base-unit) * 1.1);
+        background-color: var(--primary-background-color);
+      }
+      .pad button#clear {
+        border-color: red;
         font-size: calc(var(--base-unit) * 1.1);
       }
       .actions {
@@ -432,18 +514,25 @@ class AlarmControlPanelCard extends HTMLElement {
         justify-content: center;
         font-size: calc(var(--base-unit) * 1);
       }
-      .actions mwc-button {
-        min-width: calc(var(--base-unit) * 9);
-        color: var(--primary-color);
+      .actions button {
+        font-size: calc(var(--base-unit) * 1.5);
+        font-weight: 700;
+        width: calc(var(--base-unit) * 11);
+        height: calc(var(--base-unit) * 6);
 		margin-top: 0px;
-		margin-right: 4px;
+		margin-right: 12px;
 		margin-bottom: 0px;
-		margin-left: 4px;
+		margin-left: 12px;
+        border-width: 2px;
+        border-style: solid;
+        border-color: var(--primary-text-color);
+        background-color: var(--primary-color);
+        color: var(--primary-text-color);
       }
       .actions .autoarm {
         background: var(--alarm-color-autoarm);
       }
-      mwc-button#disarm {
+      button#disarm {
         color: var(--google-red-500);
       }
       .alpha {
@@ -471,7 +560,7 @@ class AlarmControlPanelCard extends HTMLElement {
 
     if (default_label) return default_label;
 
-    // If all else fails then pretify the passed in label const
+    // If all else fails then prettify the passed in label const
     const last_bit = label.split('.').pop();
     return last_bit.split('_').join(' ').replace(/^\w/, c => c.toUpperCase());
   }
@@ -482,3 +571,4 @@ class AlarmControlPanelCard extends HTMLElement {
 }
 
 customElements.define('alarm_control_panel-card', AlarmControlPanelCard);
+
