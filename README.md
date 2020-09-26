@@ -25,11 +25,15 @@ I moved the Disarm button from the top button row to the keypad, to the right of
 
 To use this card in Home Assistant:
 
-* copy the `alarm_control_panel-card.js` into the www folder in your config folder (create the www folder if it's missing, and restart Home Assistant)
-* install it as a custom Lovelace resource in Configuration > Lovelace Dashboards > Resources. Turn on Advanced Mode in your user profile if you can't see the Resources tab.
-* add it TO your lovelace view using a Manual card, with type set as `type: 'custom:alarm_control_panel-card'` (see my [example config](https://github.com/jcooper-korg/AlarmPanel/blob/master/ExampleConfig/AlarmLovelaceDashboard.yaml))
-
 <img src="https://github.com/jcooper-korg/AlarmPanel/blob/master/Screenshots/Installation-Resource.png?raw=true" width="400">
+
+
+* copy the `alarm_control_panel-card.js` into the www folder in your config folder (create the www folder if it's missing, and restart Home Assistant)
+* install it as a custom Lovelace resource in Configuration > Lovelace Dashboards > Resources. 
+	* Turn on Advanced Mode in your user profile if you can't see the Resources tab. 
+	* The Url of the file will be `/local/alarm_control_panel-card.js`, and the type is "JavaScript Module".  
+	* If you are making local modifications to the file, you can add a version number to the end of the Url, like `/local/alarm_control_panel-card.js?v=3` and increment the number each time you make a change, to force it to use the new version instead of your browser cached version.
+* add the alarm panel to your lovelace view using a Manual card, with type set as `type: 'custom:alarm_control_panel-card'` (see my [example config](https://github.com/jcooper-korg/AlarmPanel/blob/master/ExampleConfig/AlarmLovelaceDashboard.yaml))
 
 
 ## Card configuration options
