@@ -1,0 +1,36 @@
+# Configure a default setup of Home Assistant (frontend, api, etc)
+default_config:
+    
+# use input_text in the alarm automation to store the name of the source that triggered the alarm
+# so it can be shown in the notification automation
+input_text:
+  trigger_source:
+    name: Trigger Source
+    
+# configure manual alarm
+alarm_control_panel:
+  - platform: manual
+    name: House
+    code: !secret house_alarm_code
+    code_arm_required: false
+    trigger_time: 120
+    disarmed:
+      delay_time: 0  # immediately trigger siren by switching first to disarmed, then to trigger and since disarmed delay_time is 0, it'll immediately trigger
+    armed_away:
+      arming_time: 60
+      delay_time: 30  # when triggered in away state (used for entry doors), 30 seconds pending before trigger
+    armed_home:
+      arming_time: 0
+      delay_time: 0
+
+notify:
+  - name: alarm_notification_group
+    platform: group
+    services:
+      - service: mobile_app_iphone1
+      - service: mobile_app_iphone2
+      
+group: !include groups.yaml
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml

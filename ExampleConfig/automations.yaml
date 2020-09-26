@@ -1,0 +1,391 @@
+- id: '1598210904880'
+  alias: Turn on Beeper
+  description: When entering pending or warning state, sound the beeper
+  trigger:
+  - entity_id: alarm_control_panel.house
+    from: disarmed
+    platform: state
+    to: arming
+  - entity_id: alarm_control_panel.house
+    platform: state
+    to: pending
+  condition: []
+  action:
+  - device_id: 50e2350f1b4f40cc835509d0f34d9bcc
+    domain: switch
+    entity_id: switch.beep
+    type: turn_on
+  mode: single
+- id: '1598211133176'
+  alias: Alarm Triggered
+  description: ''
+  trigger:
+  - entity_id: alarm_control_panel.house
+    platform: state
+    to: triggered
+  condition: []
+  action:
+  - device_id: cd4e154d91e749b084a3196d9371826c
+    domain: switch
+    entity_id: switch.siren
+    type: turn_on
+  - data:
+      data:
+        subtitle: The Alarm is Sounding
+      message: 'Home Alarm triggered by: {{ states(''input_text.trigger_source'')
+        }}'
+      title: Smart Home Alert
+    service: notify.alarm_notification_group
+  mode: single
+- id: '1598211302522'
+  alias: Alarm Disarmed
+  description: ''
+  trigger:
+  - entity_id: alarm_control_panel.house
+    platform: state
+    to: disarmed
+  condition: []
+  action:
+  - device_id: cd4e154d91e749b084a3196d9371826c
+    domain: switch
+    entity_id: switch.siren
+    type: turn_off
+  - device_id: 50e2350f1b4f40cc835509d0f34d9bcc
+    domain: switch
+    entity_id: switch.beep
+    type: turn_off
+  - device_id: 50e2350f1b4f40cc835509d0f34d9bcc
+    domain: switch
+    entity_id: switch.red_led
+    type: turn_off
+  - service: notify.alarm_notification_group
+    data:
+      title: Smart Home Alert
+      message: Alarm Disarmed
+  mode: single
+- id: '1598213488706'
+  alias: All zones clear while disarmed
+  description: Turn on the green LED when all zones are clear while disarmed
+  trigger:
+  - entity_id: group.alarm_zones_for_led
+    platform: state
+    to: 'off'
+  - entity_id: alarm_control_panel.house
+    platform: state
+    to: disarmed
+  condition:
+  - condition: state
+    entity_id: alarm_control_panel.house
+    state: disarmed
+  - condition: state
+    entity_id: group.alarm_zones
+    state: 'off'
+  action:
+  - device_id: 50e2350f1b4f40cc835509d0f34d9bcc
+    domain: switch
+    entity_id: switch.green_led
+    type: turn_on
+  mode: single
+- id: '1598213553348'
+  alias: Alarm zone opened while disarmed
+  description: Turn off the green LED when any alarm zone is open while disarmed
+  trigger:
+  - entity_id: group.alarm_zones_for_led
+    platform: state
+    to: 'on'
+  - entity_id: alarm_control_panel.house
+    platform: state
+    to: disarmed
+  condition:
+  - condition: state
+    entity_id: alarm_control_panel.house
+    state: disarmed
+  - condition: state
+    entity_id: group.alarm_zones
+    state: 'on'
+  action:
+  - device_id: 50e2350f1b4f40cc835509d0f34d9bcc
+    domain: switch
+    entity_id: switch.green_led
+    type: turn_off
+  mode: single
+- id: '1598213810560'
+  alias: Alarm Armed
+  description: ''
+  trigger:
+  - entity_id: alarm_control_panel.house
+    platform: state
+    to: armed_home
+  - entity_id: alarm_control_panel.house
+    platform: state
+    to: armed_away
+  condition: []
+  action:
+  - device_id: 50e2350f1b4f40cc835509d0f34d9bcc
+    domain: switch
+    entity_id: switch.beep
+    type: turn_off
+  - device_id: 50e2350f1b4f40cc835509d0f34d9bcc
+    domain: switch
+    entity_id: switch.green_led
+    type: turn_off
+  - device_id: 50e2350f1b4f40cc835509d0f34d9bcc
+    domain: switch
+    entity_id: switch.red_led
+    type: turn_on
+  - service: notify.alarm_notification_group
+    data:
+      title: Smart Home Alert
+      message: Alarm Armed
+  mode: single
+- id: '1600468597816'
+  alias: Trigger Immediately when Arming
+  description: disarm first, then trigger, causes immediate siren due to disarmed
+    delay_time=0
+  trigger:
+  - entity_id: binary_sensor.office_window
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.living_room_window
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.kitchen_sink_window
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.kitchen_table_window
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.dining_room_window
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.master_bedroom_window
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.master_bath_window
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.bedroom1_window
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.bedroom2_window
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.side_garage_door
+    from: 'off'
+    platform: state
+    to: 'on'
+  condition:
+  - condition: state
+    entity_id: alarm_control_panel.house
+    state: arming
+  action:
+  - data_template:
+      entity_id: input_text.trigger_source
+      value: '{{ trigger.to_state.attributes.friendly_name }}'
+    service: input_text.set_value
+  - data: {}
+    entity_id: alarm_control_panel.house
+    service: script.trigger_alarm_immediately
+  mode: single
+- id: '1600468682227'
+  alias: Trigger Immediately when Armed Home
+  description: ''
+  trigger:
+  - entity_id: binary_sensor.office_window
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.living_room_window
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.kitchen_sink_window
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.kitchen_table_window
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.dining_room_window
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.master_bedroom_window
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.master_bath_window
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.bedroom1_window
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.bedroom2_window
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.side_garage_door
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.garage_door
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.front_door
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.back_door
+    from: 'off'
+    platform: state
+    to: 'on'
+  condition:
+  - condition: state
+    entity_id: alarm_control_panel.house
+    state: armed_home
+  action:
+  - data_template:
+      entity_id: input_text.trigger_source
+      value: '{{ trigger.to_state.attributes.friendly_name }}'
+    service: input_text.set_value
+  - data: {}
+    entity_id: alarm_control_panel.house
+    service: alarm_control_panel.alarm_trigger
+  mode: single
+- id: '1600468738107'
+  alias: Trigger Immediately when Armed Away
+  description: disarm first, then trigger, causes immediate siren due to disarmed
+    delay_time=0
+  trigger:
+  - entity_id: binary_sensor.office_window
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.living_room_window
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.kitchen_sink_window
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.kitchen_table_window
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.dining_room_window
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.master_bedroom_window
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.master_bath_window
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.bedroom1_window
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.bedroom2_window
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.side_garage_door
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.hall_motion
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.living_room_motion
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.glass_break_master_bath
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.glass_break_kitchen
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.glass_break_other
+    from: 'off'
+    platform: state
+    to: 'on'
+  condition:
+  - condition: state
+    entity_id: alarm_control_panel.house
+    state: armed_away
+  action:
+  - data_template:
+      entity_id: input_text.trigger_source
+      value: '{{ trigger.to_state.attributes.friendly_name }}'
+    service: input_text.set_value
+  - data: {}
+    entity_id: alarm_control_panel.house
+    service: script.trigger_alarm_immediately
+  mode: single
+- id: '1600468865168'
+  alias: Trigger Immediately on Smoke
+  description: disarm first, then trigger, causes immediate siren due to disarmed
+    delay_time=0
+  trigger:
+  - entity_id: binary_sensor.hall_smoke
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.carbon_monoxide_kitchen
+    from: 'off'
+    platform: state
+    to: 'on'
+  condition: []
+  action:
+  - data: {}
+    entity_id: alarm_control_panel.house
+    service: script.trigger_alarm_immediately
+  - data: {}
+    service: script.trigger_alarm_immediately
+  mode: single
+- id: '1600472249835'
+  alias: Trigger Pending When Armed Away
+  description: ''
+  trigger:
+  - entity_id: binary_sensor.front_door
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.back_door
+    from: 'off'
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.garage_door
+    from: 'off'
+    platform: state
+    to: 'on'
+  condition:
+  - condition: state
+    entity_id: alarm_control_panel.house
+    state: armed_away
+  action:
+  - data: {}
+    entity_id: alarm_control_panel.house
+    service: alarm_control_panel.alarm_trigger
+  mode: single

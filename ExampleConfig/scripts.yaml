@@ -1,0 +1,14 @@
+# First disarms the alarm, and then triggers it.
+# Since the delay_time in the disarmed state is set to 0
+# (in the alarm_control_panel section in configuration.yaml),
+# this will cause the alarm to immediately trigger.
+trigger_alarm_immediately:
+  alias: Trigger Alarm Immediately
+  mode: single
+  sequence:
+    - service: alarm_control_panel.alarm_disarm
+      data:
+        entity_id: alarm_control_panel.house
+        code: !secret house_alarm_code
+    - service: alarm_control_panel.alarm_trigger
+      entity_id: alarm_control_panel.house

@@ -1,0 +1,65 @@
+custom_header:
+  compact_mode: true
+  exceptions:
+    - conditions:
+        user: Alarm Panel
+      config:
+        kiosk_mode: true # hide side bar and menu bar
+views:
+  - badges: []
+    cards:
+      - confirm_entities:
+          - binary_sensor.office_window
+          - binary_sensor.living_room_window
+          - binary_sensor.kitchen_sink_window
+          - binary_sensor.kitchen_table_window
+          - binary_sensor.dining_room_window
+          - binary_sensor.master_bedroom_window
+          - binary_sensor.master_bath_window
+          - binary_sensor.bedroom1_window
+          - binary_sensor.bedroom2_window
+          - binary_sensor.front_door
+          - binary_sensor.back_door
+          - binary_sensor.garage_door
+          - binary_sensor.side_garage_door
+          - binary_sensor.hall_motion
+          - binary_sensor.living_room_motion
+        entity: alarm_control_panel.house
+        labels:
+          ui.card.alarm_control_panel.arm_away: AWAY
+          ui.card.alarm_control_panel.arm_home: HOME
+          ui.card.alarm_control_panel.clear_code: CLEAR
+          ui.card.alarm_control_panel.disarm: DISARM
+        scale: 14px
+        states:
+          - arm_home
+          - arm_away
+        type: 'custom:alarm_control_panel-card'
+      - card:
+          entities:
+            - binary_sensor.office_window
+            - binary_sensor.living_room_window
+            - binary_sensor.kitchen_sink_window
+            - binary_sensor.kitchen_table_window
+            - binary_sensor.dining_room_window
+            - binary_sensor.master_bedroom_window
+            - binary_sensor.master_bath_window
+            - binary_sensor.bedroom1_window
+            - binary_sensor.bedroom2_window
+            - binary_sensor.front_door
+            - binary_sensor.back_door
+            - binary_sensor.garage_door
+            - binary_sensor.side_garage_door
+            - binary_sensor.hall_motion
+            - binary_sensor.living_room_motion
+          state_filter:
+            - 'on'
+          type: entity-filter
+        conditions:
+          - entity: alarm_control_panel.house
+            state: disarmed
+          - entity: group.alarm_zones_for_led
+            state: 'on'
+        type: conditional
+    title: Alarm
+

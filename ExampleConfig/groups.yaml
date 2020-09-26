@@ -1,0 +1,19 @@
+  # alarm_zones_for_led is used for triggering when armed away and for the green LED state
+  alarm_zones_for_led:
+    name: Alarm Zones
+    entities:
+      - binary_sensor.hall_motion
+      - binary_sensor.living_room_motion
+      - binary_sensor.office_window
+      - binary_sensor.living_room_window
+      - binary_sensor.kitchen_sink_window
+      - binary_sensor.kitchen_table_window
+      - binary_sensor.dining_room_window
+      - binary_sensor.master_bedroom_window
+      - binary_sensor.master_bath_window
+      - binary_sensor.bedroom1_window
+      - binary_sensor.bedroom2_window
+      - binary_sensor.front_door
+      - binary_sensor.back_door
+      - binary_sensor.garage_door
+      - binary_sensor.side_garage_door
