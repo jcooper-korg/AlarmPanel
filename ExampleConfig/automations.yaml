@@ -193,7 +193,6 @@
       value: '{{ trigger.to_state.attributes.friendly_name }}'
     service: input_text.set_value
   - data: {}
-    entity_id: alarm_control_panel.house
     service: script.trigger_alarm_immediately
   mode: single
 - id: '1600468682227'
@@ -340,7 +339,6 @@
       value: '{{ trigger.to_state.attributes.friendly_name }}'
     service: input_text.set_value
   - data: {}
-    entity_id: alarm_control_panel.house
     service: script.trigger_alarm_immediately
   mode: single
 - id: '1600468865168'
@@ -358,9 +356,10 @@
     to: 'on'
   condition: []
   action:
-  - data: {}
-    entity_id: alarm_control_panel.house
-    service: script.trigger_alarm_immediately
+  - data_template:
+      entity_id: input_text.trigger_source
+      value: '{{ trigger.to_state.attributes.friendly_name }}'
+    service: input_text.set_value
   - data: {}
     service: script.trigger_alarm_immediately
   mode: single
