@@ -6,10 +6,10 @@ I have also included my complete working [manual alarm control panel](https://ww
 
 ## Card Modification Goals 
 
-* improve the appearance of the arm/disarm and keypad buttons on current Home Assistant
-* high visibility and ergonomically sized on web, iOS companion app, and wall mounted tablet
-* hide the key pad when arming (if `alarm_control_panel.code_arm_required` is off)
-* add a config option to show Ready / Not Ready when disarmed, based in a given list of entities
+* improve the appearance of the arm/disarm and keypad buttons (which are too small on current Home Assistant versions)
+* high visibility and ergonomically sized buttons on web, iOS companion app, and wall mounted tablet
+* hide the key pad when disarmed (if `alarm_control_panel.code_arm_required` is off)
+* add a config option to show Ready / Not Ready when disarmed, monitoring a given list of entities
 
 I changed the buttons from mwc-button to regular buttons. I couldn't find a reliable way to make the mwc-buttons larger (even using tools like [Thomas Loven's card mod](https://github.com/thomasloven/lovelace-card-mod)), and they were just much too small on a wall-mounted tablet.
 
@@ -61,7 +61,7 @@ Other options from [Kevin Cooper's original card](https://github.com/JumpMaster/
 My alarm setup consists of:
 
 * Home Assistant running on Hass.io, on a [Raspberry Pi 3b+](https://www.raspberrypi.org/products/raspberry-pi-3-model-b-plus/)
-* a 7" Amazon Fire Tablet, running [Fully Kiosk](https://www.fully-kiosk.com)
+* a wall-mounted 7" Amazon Fire Tablet, running [Fully Kiosk](https://www.fully-kiosk.com)
 * the iOS [Home Assistant Companion](https://apps.apple.com/us/app/home-assistant/id1099568401)
 * an alarm panel kit from [Konnected.io](https://konnected.io/collections/shop-now) with various door/window/motion/smoke sensors, and a siren, beeper, and red/green LEDs
 
