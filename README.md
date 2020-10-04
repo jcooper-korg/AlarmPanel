@@ -10,6 +10,7 @@ I have also included my complete working [manual alarm control panel](https://ww
 * high visibility and ergonomically sized buttons on web, iOS companion app, and wall mounted tablet
 * hide the key pad when disarmed (if `alarm_control_panel.code_arm_required` is off)
 * add a config option to show Ready / Not Ready when disarmed, monitoring a given list of entities
+* add a config option to show a countdown timer when arming or pending
 
 I changed the buttons from mwc-button to regular buttons. I couldn't find a reliable way to make the mwc-buttons larger (even using tools like [Thomas Loven's card mod](https://github.com/thomasloven/lovelace-card-mod)), and they were just much too small on a wall-mounted tablet.
 
@@ -43,6 +44,7 @@ See the [ExampleConfig](https://github.com/jcooper-korg/AlarmPanel/tree/master/E
 The card options are:
 
 * `entity`: (required string) the name of the manual `alarm_control_panel` entity
+* `timer_entity`: (optional string) the name of the global timer entity to be used during arming/pending
 * `scale`: (optional string). default is 14px. increase/decrease the size of the buttons/text/etc by changing this number
 * `title`: (optional string) if provided will show this title at the top of the card, and the alarm state will be below it. if not provided, will show the alarm state as the title (which saves some vertical space, if you are space constrained, like on a wall tablet)
 * `states`: (optional list). list of arming states to support. Default is `armed_away` and `armed_home`. If you use more than two, you may need to adjust the `.actions button` widths 
@@ -78,4 +80,5 @@ My config files are in the [ExampleConfig](https://github.com/jcooper-korg/Alarm
 	* triggering the alarm on smoke sensors, regardless of arming state
 * In order to include the name of the entity that triggered the alarm in the trigger notifications, I'm using an input_text entity in my config, which is set when the alarm trigger automation runs, and is then referenced by the notification
 * In order to be able to trigger the alarm immediately for some sensors, while other sensors (e.g. entry doors) are delayed, I have a script called `trigger_alarm_immediately` which first disarms the alarm, and then triggers. Requires that the the `delay_time` is set to 0 for the disarmed state in the `alarm_control_panel` configuration.
+* To show a countdown timer when arming/pending, I use a timer entity (added in configuration.yaml). Using a global timer allows it to show the same time remaining on different instances of the card (e.g. phone, wall tablet, desktop), regardless of whether the card was showing at the time of the alarm state change.
 * I created a separate user named Alarm Panel that I use to log in from my wall mounted tablet. I'm using [Custom Header](https://maykar.github.io/custom-header/) to hide the sidebar and title bar on the wall mounted tablet for that user.

@@ -8,6 +8,9 @@
 // the status title if all those entities are off, otherwise it'll show "Not Ready".
 // (can customize those strings in the labels config using ready and not_ready)
 //
+// to show a countdown timer when arming/pending, create a timer entity in your HA config, and specify
+//  timer_entity: timer_entity_name in this card config
+//
 // if alarm_control_panel.code_arm_required, the keypad will be hidden when disarmed, regardless of the
 // hide_keypad and auto_hide options.
 //
@@ -29,6 +32,9 @@ class AlarmControlPanelCard extends HTMLElement {
       'triggered': 'hass:bell-ring',
     }
     this._entitiesReady = false;
+
+    this._previousTimerState = 'idle';
+    this._countdownTimerFunction = null;
   }
 
   set hass(hass) {
@@ -41,6 +47,22 @@ class AlarmControlPanelCard extends HTMLElement {
       if(!this.shadowRoot.lastChild) {
         this._createCard(entity);
       }
+  
+      if (this._config.timer_entity) {
+        if (this.myhass.states[this._config.timer_entity].state != this._previousTimerState) {
+          if (this.myhass.states[this._config.timer_entity].state === 'active') {
+            this._timerObject = hass.states[this._config.timer_entity];
+            this._countdownTimerFunction = setInterval( () => this._doCountdownTimer(), 1000);
+          }
+          else if (this._countdownTimerFunction)
+          {
+             clearInterval(this._countdownTimerFunction);
+             this._countdownTimerFunction = null;
+          }
+        }
+        this._previousTimerState = this.myhass.states[this._config.timer_entity].state;
+      }
+      
       if (entity.state != this._state) {
         this._state = entity.state;
         this._entitiesReady = this._confirmEntitiesReady();
@@ -103,13 +125,29 @@ class AlarmControlPanelCard extends HTMLElement {
     const card = root.lastChild;
     const config = this._config;
 
+    if (this._config.timer_entity) {
+      if (this._state === "disarmed") {
+        // cancel timer
+        this.myhass.callService('timer', 'finish', {
+          entity_id: this._config.timer_entity
+        });
+      }
+      else if (this._state === "pending") {
+  //    const countdownTime = this.myhass.states[this._config.timer_entity].attributes.armed_away.pending_time;    // todo get actual time from alarm panel state
+        const countdownTimeSecs = 30;
+        this._startCountdownTimer(countdownTimeSecs)
+      
+      }
+      
+    }
+    
     const state_str = "state.alarm_control_panel." + this._state;
     status = this._label(state_str);
     if (config.confirm_entities && this._state === "disarmed") {
       if (this._entitiesReady)
-		status = status + " - " + this._label("ready");
-	  else
-		status = status + " - " + this._label("not_ready");
+        status = status + " - " + this._label("ready");
+      else
+        status = status + " - " + this._label("not_ready");
     }
     
     if (config.title) {
@@ -121,7 +159,7 @@ class AlarmControlPanelCard extends HTMLElement {
     }
 
     root.getElementById("state-icon").setAttribute("icon",
-      this._icons[this._state] || 'mdi:shield-outline');
+    this._icons[this._state] || 'mdi:shield-outline');
     root.getElementById("badge-icon").className = this._state;
 
     var iconText = this._stateIconLabel(this._state);
@@ -132,7 +170,7 @@ class AlarmControlPanelCard extends HTMLElement {
       if (iconText.length > 5) {
         root.getElementById("icon-label").className = "label big";
       } else {
-	root.getElementById("icon-label").className = "label";
+        root.getElementById("icon-label").className = "label";
       }
       root.getElementById("icon-text").innerHTML = iconText;
     }
@@ -141,15 +179,14 @@ class AlarmControlPanelCard extends HTMLElement {
     root.getElementById("arm-actions").style.display = armVisible ? "" : "none";
     root.getElementById("disarm-actions").style.display = armVisible ? "none" : "";
 
-	// hide code and number pad if disarmed, if manual alarm config has code_arm_required=false
-	if (!this.code_arm_required) {
-		root.getElementById("keypad").style.display = armVisible ? "none" : "flex";
-		root.getElementById("input-code").style.display = armVisible ? "none" : "";
-	}
+    // hide code and number pad if disarmed, if manual alarm config has code_arm_required=false
+    if (!this.code_arm_required) {
+        root.getElementById("keypad").style.display = armVisible ? "none" : "flex";
+        root.getElementById("input-code").style.display = armVisible ? "none" : "";
+    }
   }
 
   _actionButtons() {
-    const armVisible = (this._state === 'disarmed');
     return `
       <div id="arm-actions" class="actions">
         ${this._config.states.map(el => `${this._actionButton(el)}`).join('')}
@@ -158,11 +195,11 @@ class AlarmControlPanelCard extends HTMLElement {
 
   _stateIconLabel(state) {
     const stateLabel = state.split("_").pop();
-    return stateLabel === "disarmed" ||
-      stateLabel === "triggered" ||
-      !stateLabel
-      ? ""
-      : stateLabel;
+    if (stateLabel === "disarmed" || stateLabel === "triggered" || !stateLabel)
+       return "";
+//    if (stateLabel === "arming" && this._config.timer_entity)
+//      return this.myhass.states[this._config.timer_entity].attributes.remaining;
+    return stateLabel;
   }
 
   _iconLabel() {
@@ -178,12 +215,28 @@ class AlarmControlPanelCard extends HTMLElement {
             </div>
           </div>
         </div>
-    </ha-label-badge-icon>`;	  
+    </ha-label-badge-icon>`;
   }
 
   _actionButton(state) {
     return `<button outlined id="${state}">
       ${this._label("ui.card.alarm_control_panel." + state)}</button>`;
+  }
+
+  _durationToSeconds(duration) {
+    const parts = duration.split(":").map(Number);
+    return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  }
+
+  _doCountdownTimer() {
+    const now = new Date().getTime();
+    const madeActive = new Date(this.myhass.states[this._config.timer_entity].last_changed).getTime();
+    let timeRemaining =  this._durationToSeconds(this.myhass.states[this._config.timer_entity].attributes.remaining);
+    timeRemaining = Math.max(timeRemaining - (now - madeActive) / 1000, 0);
+  
+    //this.shadowRoot.lastChild.header = Math.round(timeRemaining);
+
+    this.shadowRoot.getElementById("icon-text").innerHTML = Math.round(timeRemaining);
   }
 
   _setupActions() {
@@ -218,10 +271,15 @@ class AlarmControlPanelCard extends HTMLElement {
       })
     } else {
       card.querySelectorAll(".actions button").forEach(element => {
+        // note- disarm button is handled in _setupKeypad
         element.addEventListener('click', event => {
           const input = card.querySelector('paper-input');
           const value = input ? input.value : '';
           this._callService(element.id, value);
+
+//        const countdownTime = this.myhass.states[this._config.timer_entity].attributes.armed_away.arming_time;    // todo get actual time from alarm panel state
+          const countdownTimeSecs = element.id === 'arm_away' ? 60 : 0;
+          this._startCountdownTimer(countdownTimeSecs)
         })
       })
     }
@@ -236,6 +294,16 @@ class AlarmControlPanelCard extends HTMLElement {
     if (input) input.value = '';
   }
 
+  _startCountdownTimer(countdownTimeSecs)
+  {
+    if (this._config.timer_entity && countdownTimeSecs != 0) {
+      this.myhass.callService('timer', 'start', {
+        entity_id: this._config.timer_entity,
+        duration: countdownTimeSecs
+      });
+    }
+  }
+  
   _setupInput() {
     if (this._config.auto_enter) {
       const input = this.shadowRoot.lastChild.querySelector("paper-input");
@@ -316,8 +384,8 @@ class AlarmControlPanelCard extends HTMLElement {
     for (var i = 0; i < this._config.confirm_entities.length; i++) {
        if (this.myhass.states[this._config.confirm_entities[i]].state != "off")
          return false;
-	}
-	return true;
+    }
+    return true;
   }
 
   _keypadButton(button, alpha, id='') {
@@ -342,14 +410,14 @@ class AlarmControlPanelCard extends HTMLElement {
         --alarm-color-autoarm: rgba(0, 153, 255, .1);
         --alarm-state-color: var(--alarm-color-armed);
         --base-unit: ${this._config.scale};
-//		font-family: Roboto,sans-serif;
+//        font-family: Roboto,sans-serif;
         font-size: calc(var(--base-unit));
         ${icon_style}
       }
       ha-icon {
         color: var(--alarm-state-color);
-	    width: 24px;
-	    height: 24px;
+        width: 24px;
+        height: 24px;
       }
       ha-label-badge-icon {
         --ha-label-badge-color: var(--alarm-state-color);
@@ -397,7 +465,7 @@ class AlarmControlPanelCard extends HTMLElement {
         left: -0.2em;
         right: -0.2em;
         line-height: 1em;
-        font-size: 0.5em;
+        font-size: 0.6em;
       }
       .label-badge .label span {
         box-sizing: border-box;
@@ -442,20 +510,20 @@ class AlarmControlPanelCard extends HTMLElement {
         --alarm-state-color: var(--alarm-color-pending);
         animation: pulse 1s infinite;
       }
-      @keyframes pulse {
-        0% {
-          --ha-label-badge-color: var(--alarm-state-color);
-        }
-        100% {
-          --ha-label-badge-color: rgba(255, 153, 0, 0.3);
-        }
-      }
+//      @keyframes pulse {
+//        0% {
+//          --ha-label-badge-color: var(--alarm-state-color);
+//        }
+//        100% {
+//          --ha-label-badge-color: rgba(255, 153, 0, 0.3);
+//        }
+//      }
       paper-input {
         justify-content: center;
         margin: auto;
         max-width: 200px;
         font-size: calc(var(--base-unit) * 3);
-		font-weight: bold;
+        font-weight: bold;
       }
       .state {
         margin-left: 20px;
@@ -519,10 +587,10 @@ class AlarmControlPanelCard extends HTMLElement {
         font-weight: 700;
         width: calc(var(--base-unit) * 11);
         height: calc(var(--base-unit) * 6);
-		margin-top: 0px;
-		margin-right: 12px;
-		margin-bottom: 0px;
-		margin-left: 12px;
+        margin-top: 0px;
+        margin-right: 12px;
+        margin-bottom: 0px;
+        margin-left: 12px;
         border-width: 2px;
         border-style: solid;
         border-color: var(--primary-text-color);
