@@ -67,9 +67,10 @@ class AlarmControlPanelCard extends HTMLElement {
         this._previousTimerState = this.myhass.states[this._config.timer_entity].state;
       }
       
-      if (entity.state != this._state) {
+      const updatedEntitiesReady = this._confirmEntitiesReady();
+      if (entity.state != this._state || this._entitiesReady != updatedEntitiesReady) {
         this._state = entity.state;
-        this._entitiesReady = this._confirmEntitiesReady();
+        this._entitiesReady = updatedEntitiesReady;
         this._updateCardContent(entity);
       }
     }
