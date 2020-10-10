@@ -35,6 +35,9 @@ class AlarmControlPanelCard extends HTMLElement {
 
     this._previousTimerState = 'idle';
     this._countdownTimerFunction = null;
+    this._timerRadius = 30;
+    this._timerStrokeWidth = this._timerRadius / 5;
+    this._timerSize = 2 * (this._timerRadius + this._timerStrokeWidth);
   }
 
   set hass(hass) {
@@ -52,6 +55,7 @@ class AlarmControlPanelCard extends HTMLElement {
         if (this.myhass.states[this._config.timer_entity].state != this._previousTimerState) {
           if (this.myhass.states[this._config.timer_entity].state === 'active') {
             this._timerObject = hass.states[this._config.timer_entity];
+            this._doCountdownTimer();
             this._countdownTimerFunction = setInterval( () => this._doCountdownTimer(), 1000);
           }
           else if (this._countdownTimerFunction)
@@ -77,8 +81,10 @@ class AlarmControlPanelCard extends HTMLElement {
     const card = document.createElement('ha-card');
     card.innerHTML = `
       ${this._iconLabel()}
+      ${this._timerCanvas()}
       ${config.title ? '<div id="state-text"></div>' : ''}
     `;
+
     const content = document.createElement('div');
     content.id = "content";
     content.style.display = config.auto_hide ? 'none' : '';
@@ -89,9 +95,11 @@ class AlarmControlPanelCard extends HTMLElement {
           type="password"></paper-input>` : ''}
       ${this._keypad(entity)}
     `;
+
     card.appendChild(this._style(config.style, entity));
     card.appendChild(content);
     this.shadowRoot.appendChild(card);
+    this.shadowRoot.getElementById("countdown").style.display = 'none'; // start hidden
 
     this._setupInput();
     this._setupKeypad();
@@ -131,14 +139,15 @@ class AlarmControlPanelCard extends HTMLElement {
         this.myhass.callService('timer', 'finish', {
           entity_id: this._config.timer_entity
         });
+        root.getElementById("countdown").style.display = 'none';
+        root.getElementById("badge-icon").style.display = '';
+        
       }
       else if (this._state === "pending") {
   //    const countdownTime = this.myhass.states[this._config.timer_entity].attributes.armed_away.pending_time;    // todo get actual time from alarm panel state
         const countdownTimeSecs = 30;
-        this._startCountdownTimer(countdownTimeSecs)
-      
+        this._startCountdownTimer(countdownTimeSecs);
       }
-      
     }
     
     const state_str = "state.alarm_control_panel." + this._state;
@@ -197,8 +206,6 @@ class AlarmControlPanelCard extends HTMLElement {
     const stateLabel = state.split("_").pop();
     if (stateLabel === "disarmed" || stateLabel === "triggered" || !stateLabel)
        return "";
-//    if (stateLabel === "arming" && this._config.timer_entity)
-//      return this.myhass.states[this._config.timer_entity].attributes.remaining;
     return stateLabel;
   }
 
@@ -217,7 +224,19 @@ class AlarmControlPanelCard extends HTMLElement {
         </div>
     </ha-label-badge-icon>`;
   }
-
+  
+  _timerCanvas() {
+    // radius 30.  strokewidth = radius/4. width = 2*radius + strokewidth * 2
+    if (this._config.timer_entity) {
+      return `
+        <countdown-timer id='countdown'>
+          <canvas id="timerCanvas" width="${this._timerSize}" height="${this._timerSize}">
+            <span id="countdown-text" role="status"></span>
+          </canvas>
+        </countdown-timer>`;
+    }
+    return '';
+  }
   _actionButton(state) {
     return `<button outlined id="${state}">
       ${this._label("ui.card.alarm_control_panel." + state)}</button>`;
@@ -231,12 +250,45 @@ class AlarmControlPanelCard extends HTMLElement {
   _doCountdownTimer() {
     const now = new Date().getTime();
     const madeActive = new Date(this.myhass.states[this._config.timer_entity].last_changed).getTime();
-    let timeRemaining =  this._durationToSeconds(this.myhass.states[this._config.timer_entity].attributes.remaining);
-    timeRemaining = Math.max(timeRemaining - (now - madeActive) / 1000, 0);
-  
-    //this.shadowRoot.lastChild.header = Math.round(timeRemaining);
+    const durationSeconds =  this._durationToSeconds(this.myhass.states[this._config.timer_entity].attributes.remaining);
+    const elapsedSeconds = (now - madeActive) / 1000;
+    const timeRemaining = Math.round(Math.max(durationSeconds - elapsedSeconds, 0));
+    const elapsedPercent = elapsedSeconds / durationSeconds;
 
-    this.shadowRoot.getElementById("icon-text").innerHTML = Math.round(timeRemaining);
+    var canvas = this.shadowRoot.getElementById("timerCanvas");
+    var ctx = canvas.getContext("2d");
+    ctx.lineWidth = this._timerStrokeWidth;
+    ctx.clearRect(0, 0, this._timerSize, this._timerSize);
+    
+    const centerPos = this._timerSize / 2;
+    if (elapsedPercent > 0.75)
+      ctx.fillStyle = 'red';
+    else if (elapsedPercent > 0.5)
+      ctx.fillStyle = 'orange';
+    else
+      ctx.fillStyle = '#8ac575';
+      
+    // draw filled center circle
+    ctx.beginPath();
+    ctx.arc(centerPos, centerPos, this._timerRadius, 0, 2*Math.PI, false);
+    ctx.fill();
+    
+    // draw arc around edges counter-clockwise from top-center 1.5*pi to 3.5*pi
+    const endAngle = 3.5 * Math.PI - 2 * Math.PI * elapsedPercent;
+    ctx.beginPath();
+    ctx.arc(centerPos, centerPos, this._timerRadius, 1.5 * Math.PI, endAngle, false);
+    ctx.strokeStyle = '#477050';
+    ctx.stroke();
+    
+    // draw text label
+    const fontSize = this._timerRadius/1.2;
+    ctx.font = "700 " + fontSize + "px sans-serif";
+    ctx.lineWidth = this._strokeWidth;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle  = "white";
+    ctx.fillText(timeRemaining, this._timerSize/2, this._timerSize/2);
+
   }
 
   _setupActions() {
@@ -297,6 +349,8 @@ class AlarmControlPanelCard extends HTMLElement {
   _startCountdownTimer(countdownTimeSecs)
   {
     if (this._config.timer_entity && countdownTimeSecs != 0) {
+      this.shadowRoot.getElementById("countdown").style.display = '';
+      this.shadowRoot.getElementById("badge-icon").style.display = 'none';
       this.myhass.callService('timer', 'start', {
         entity_id: this._config.timer_entity,
         duration: countdownTimeSecs
@@ -418,6 +472,11 @@ class AlarmControlPanelCard extends HTMLElement {
         color: var(--alarm-state-color);
         width: 24px;
         height: 24px;
+      }
+      countdown-timer {
+        position: absolute;
+        right: 12px;
+        top: 12px;
       }
       ha-label-badge-icon {
         --ha-label-badge-color: var(--alarm-state-color);

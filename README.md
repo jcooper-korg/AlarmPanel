@@ -20,6 +20,7 @@ I moved the Disarm button from the top button row to the keypad, to the right of
 
 <img src="https://github.com/jcooper-korg/AlarmPanel/blob/master/Screenshots/Disarmed-ready.png?raw=true" width="400">
 <img src="https://github.com/jcooper-korg/AlarmPanel/blob/master/Screenshots/Disarmed-not-ready.png?raw=true" width="400">
+<img src="https://github.com/jcooper-korg/AlarmPanel/blob/master/Screenshots/Arming-countdown.png?raw=true" width="400">
 <img src="https://github.com/jcooper-korg/AlarmPanel/blob/master/Screenshots/Armed-home.png?raw=true" width="400">
 
 ## Installation
@@ -80,5 +81,5 @@ My config files are in the [ExampleConfig](https://github.com/jcooper-korg/Alarm
 	* triggering the alarm on smoke sensors, regardless of arming state
 * In order to include the name of the entity that triggered the alarm in the trigger notifications, I'm using an input_text entity in my config, which is set when the alarm trigger automation runs, and is then referenced by the notification
 * In order to be able to trigger the alarm immediately for some sensors, while other sensors (e.g. entry doors) are delayed, I have a script called `trigger_alarm_immediately` which first disarms the alarm, and then triggers. Requires that the the `delay_time` is set to 0 for the disarmed state in the `alarm_control_panel` configuration.
-* To show a countdown timer when arming/pending, I use a timer entity (added in configuration.yaml). Using a global timer allows it to show the same time remaining on different instances of the card (e.g. phone, wall tablet, desktop), regardless of whether the card was showing at the time of the alarm state change.
+* To show a countdown timer when arming/pending, I use a timer entity (added in configuration.yaml). Using a global timer allows it to show the same time remaining on different instances of the card (e.g. phone, wall tablet, desktop), regardless of whether the card was showing at the time of the alarm state change. NOTE: I haven't figured out how to obtain the arming/pending times from the `alarm_control_panel` config, so these are unfortunately hard-coded for now at 30/60.
 * I created a separate user named Alarm Panel that I use to log in from my wall mounted tablet. I'm using [Custom Header](https://maykar.github.io/custom-header/) to hide the sidebar and title bar on the wall mounted tablet for that user.
