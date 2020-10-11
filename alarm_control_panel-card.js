@@ -353,8 +353,11 @@ class AlarmControlPanelCard extends HTMLElement {
 
   _showCountdownTimer(show)
   {
+    if (this._config.timer_entity)
       this.shadowRoot.getElementById("countdown").style.display = show ? '' : 'none';
-      this.shadowRoot.getElementById("badge-icon").style.display = show ? 'none' : '';
+    else
+      show = false;
+    this.shadowRoot.getElementById("badge-icon").style.display = show ? 'none' : '';
   }
   
   _startCountdownTimer(countdownTimeSecs)
@@ -474,7 +477,6 @@ class AlarmControlPanelCard extends HTMLElement {
         --alarm-color-autoarm: rgba(0, 153, 255, .1);
         --alarm-state-color: var(--alarm-color-armed);
         --base-unit: ${this._config.scale};
-//        font-family: Roboto,sans-serif;
         font-size: calc(var(--base-unit));
         ${icon_style}
       }
@@ -534,7 +536,7 @@ class AlarmControlPanelCard extends HTMLElement {
         left: -0.2em;
         right: -0.2em;
         line-height: 1em;
-        font-size: 0.6em;
+        font-size: 0.5em;
       }
       .label-badge .label span {
         box-sizing: border-box;
