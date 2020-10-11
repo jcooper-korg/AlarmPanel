@@ -32,7 +32,7 @@ class AlarmControlPanelCard extends HTMLElement {
       'triggered': 'hass:bell-ring',
     }
     this._entitiesReady = false;
-
+    this._previousAlarmState = 'disarmed';
     this._previousTimerState = 'idle';
     this._countdownTimerFunction = null;
     this._timerRadius = 30;
@@ -54,14 +54,18 @@ class AlarmControlPanelCard extends HTMLElement {
       if (this._config.timer_entity) {
         if (this.myhass.states[this._config.timer_entity].state != this._previousTimerState) {
           if (this.myhass.states[this._config.timer_entity].state === 'active') {
+            // timer was made active, so start an interval callback to draw the timer
+            this._showCountdownTimer(true);
             this._timerObject = hass.states[this._config.timer_entity];
-            this._doCountdownTimer();
+            this._doCountdownTimer();	// draw once right away
             this._countdownTimerFunction = setInterval( () => this._doCountdownTimer(), 1000);
           }
           else if (this._countdownTimerFunction)
           {
-             clearInterval(this._countdownTimerFunction);
-             this._countdownTimerFunction = null;
+            // timer finished, so stop callback
+              this._showCountdownTimer(false);
+              clearInterval(this._countdownTimerFunction);
+              this._countdownTimerFunction = null;
           }
         }
         this._previousTimerState = this.myhass.states[this._config.timer_entity].state;
@@ -69,6 +73,7 @@ class AlarmControlPanelCard extends HTMLElement {
       
       const updatedEntitiesReady = this._confirmEntitiesReady();
       if (entity.state != this._state || this._entitiesReady != updatedEntitiesReady) {
+        this._previousAlarmState = this._state;
         this._state = entity.state;
         this._entitiesReady = updatedEntitiesReady;
         this._updateCardContent(entity);
@@ -100,7 +105,7 @@ class AlarmControlPanelCard extends HTMLElement {
     card.appendChild(this._style(config.style, entity));
     card.appendChild(content);
     this.shadowRoot.appendChild(card);
-    this.shadowRoot.getElementById("countdown").style.display = 'none'; // start hidden
+    this._showCountdownTimer(false); // start hidden
 
     this._setupInput();
     this._setupKeypad();
@@ -134,17 +139,16 @@ class AlarmControlPanelCard extends HTMLElement {
     const card = root.lastChild;
     const config = this._config;
 
-    if (this._config.timer_entity) {
+    if (this._config.timer_entity &&  this._previousAlarmState != this._state) {
       if (this._state === "disarmed") {
         // cancel timer
         this.myhass.callService('timer', 'finish', {
           entity_id: this._config.timer_entity
         });
-        root.getElementById("countdown").style.display = 'none';
-        root.getElementById("badge-icon").style.display = '';
-        
+        this._showCountdownTimer(false);
       }
       else if (this._state === "pending") {
+		// respond to alarm going pending (door/window opened) by starting countdown timer
   //    const countdownTime = this.myhass.states[this._config.timer_entity].attributes.armed_away.pending_time;    // todo get actual time from alarm panel state
         const countdownTimeSecs = 30;
         this._startCountdownTimer(countdownTimeSecs);
@@ -347,11 +351,16 @@ class AlarmControlPanelCard extends HTMLElement {
     if (input) input.value = '';
   }
 
+  _showCountdownTimer(show)
+  {
+      this.shadowRoot.getElementById("countdown").style.display = show ? '' : 'none';
+      this.shadowRoot.getElementById("badge-icon").style.display = show ? 'none' : '';
+  }
+  
   _startCountdownTimer(countdownTimeSecs)
   {
     if (this._config.timer_entity && countdownTimeSecs != 0) {
-      this.shadowRoot.getElementById("countdown").style.display = '';
-      this.shadowRoot.getElementById("badge-icon").style.display = 'none';
+      this._showCountdownTimer(true);
       this.myhass.callService('timer', 'start', {
         entity_id: this._config.timer_entity,
         duration: countdownTimeSecs
