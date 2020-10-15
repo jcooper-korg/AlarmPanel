@@ -10,7 +10,7 @@ I have also included my complete working [manual alarm control panel](https://ww
 * high visibility and ergonomically sized buttons on web, iOS companion app, and wall mounted tablet
 * hide the key pad when disarmed (if `alarm_control_panel.code_arm_required` is off)
 * add a config option to show Ready / Not Ready when disarmed, monitoring a given list of entities
-* add a config option to show a countdown timer when arming or pending
+* add a config option to show a countdown timer when arming or pending (see installation note for required custom manual component)
 
 I changed the buttons from mwc-button to regular buttons. I couldn't find a reliable way to make the mwc-buttons larger (even using tools like [Thomas Loven's card mod](https://github.com/thomasloven/lovelace-card-mod)), and they were just much too small on a wall-mounted tablet.
 
@@ -36,7 +36,7 @@ To use this card in Home Assistant:
 	* The Url of the file will be `/local/alarm_control_panel-card.js`, and the type is "JavaScript Module".  
 	* If you are making local modifications to the file, you can add a version number to the end of the Url, like `/local/alarm_control_panel-card.js?v=3` and increment the number each time you make a change, to force it to use the new version instead of your browser cached version.
 * add the alarm panel to your lovelace view using a Manual card, with type set as `type: 'custom:alarm_control_panel-card'` (see my [example config](https://github.com/jcooper-korg/AlarmPanel/blob/master/ExampleConfig/AlarmLovelaceDashboard.yaml))
-
+* to use the countdown timer, you must have an updated manual alarm component. I have sent a pull request for the changes, but while waiting on that, the [custom component can be found here](https://github.com/jcooper-korg/core/tree/dev/homeassistant/components/manual). Install it in your `config/custom_components/manual` folder.
 
 ## Card configuration options
 
@@ -45,7 +45,7 @@ See the [ExampleConfig](https://github.com/jcooper-korg/AlarmPanel/tree/master/E
 The card options are:
 
 * `entity`: (required string) the name of the manual `alarm_control_panel` entity
-* `timer_entity`: (optional string) the name of the global timer entity to be used during arming/pending
+* `show_countdown_timer`: (optional boolean). default false. set to true to show countdown timer, or false to hide it. 
 * `scale`: (optional string). default is 14px. increase/decrease the size of the buttons/text/etc by changing this number
 * `title`: (optional string) if provided will show this title at the top of the card, and the alarm state will be below it. if not provided, will show the alarm state as the title (which saves some vertical space, if you are space constrained, like on a wall tablet)
 * `states`: (optional list). list of arming states to support. Default is `armed_away` and `armed_home`. If you use more than two, you may need to adjust the `.actions button` widths 
@@ -69,7 +69,7 @@ My alarm setup consists of:
 * an alarm panel kit from [Konnected.io](https://konnected.io/collections/shop-now) with various door/window/motion/smoke sensors, and a siren, beeper, and red/green LEDs
 
 ## Example Configuration
-My config files are in the [ExampleConfig](https://github.com/jcooper-korg/AlarmPanel/tree/master/ExampleConfig) folder. This was last tested with HA 0.114.3.
+My config files are in the [ExampleConfig](https://github.com/jcooper-korg/AlarmPanel/tree/master/ExampleConfig) folder. 
 
 * My Alarm lovelace dashboard has two cards- the new custom alarm panel card, and a [Conditional Card](https://www.home-assistant.io/lovelace/conditional) which shows when any of the door/window sensors is opened, while disarmed.
 * I have configured the custom card with:
@@ -81,5 +81,5 @@ My config files are in the [ExampleConfig](https://github.com/jcooper-korg/Alarm
 	* triggering the alarm on smoke sensors, regardless of arming state
 * In order to include the name of the entity that triggered the alarm in the trigger notifications, I'm using an input_text entity in my config, which is set when the alarm trigger automation runs, and is then referenced by the notification
 * In order to be able to trigger the alarm immediately for some sensors, while other sensors (e.g. entry doors) are delayed, I have a script called `trigger_alarm_immediately` which first disarms the alarm, and then triggers. Requires that the the `delay_time` is set to 0 for the disarmed state in the `alarm_control_panel` configuration.
-* To show a countdown timer when arming/pending, I use a timer entity (added in configuration.yaml). Using a global timer allows it to show the same time remaining on different instances of the card (e.g. phone, wall tablet, desktop), regardless of whether the card was showing at the time of the alarm state change. NOTE: I haven't figured out how to obtain the arming/pending times from the `alarm_control_panel` config, so these are unfortunately hard-coded for now at 30/60.
-* I created a separate user named Alarm Panel that I use to log in from my wall mounted tablet. I'm using [Custom Header](https://maykar.github.io/custom-header/) to hide the sidebar and title bar on the wall mounted tablet for that user.
+* To show a countdown timer when arming/pending, an update to the manual alaram component is required (to publish the state_duration). I have sent a pull request, but meanwhile the [custom component can be found here](https://github.com/jcooper-korg/core/tree/dev/homeassistant/components/manual). Install it in your `config/custom_components/manual` folder.
+* I created a separate user named Alarm Panel that I use to log in from my wall mounted tablet. I'm using [Custom Header](https://maykar.github.io/custom-header) to hide the sidebar and title bar on the wall mounted tablet for that user.

@@ -8,9 +8,6 @@
 // the status title if all those entities are off, otherwise it'll show "Not Ready".
 // (can customize those strings in the labels config using ready and not_ready)
 //
-// to show a countdown timer when arming/pending, create a timer entity in your HA config, and specify
-//  timer_entity: timer_entity_name in this card config
-//
 // if alarm_control_panel.code_arm_required, the keypad will be hidden when disarmed, regardless of the
 // hide_keypad and auto_hide options.
 //
@@ -33,7 +30,6 @@ class AlarmControlPanelCard extends HTMLElement {
     }
     this._entitiesReady = false;
     this._previousAlarmState = 'disarmed';
-    this._previousTimerState = 'idle';
     this._countdownTimerFunction = null;
     this._timerRadius = 30;
     this._timerStrokeWidth = this._timerRadius / 5;
@@ -49,26 +45,6 @@ class AlarmControlPanelCard extends HTMLElement {
 
       if(!this.shadowRoot.lastChild) {
         this._createCard(entity);
-      }
-  
-      if (this._config.timer_entity) {
-        if (this.myhass.states[this._config.timer_entity].state != this._previousTimerState) {
-          if (this.myhass.states[this._config.timer_entity].state === 'active') {
-            // timer was made active, so start an interval callback to draw the timer
-            this._showCountdownTimer(true);
-            this._timerObject = hass.states[this._config.timer_entity];
-            this._doCountdownTimer();	// draw once right away
-            this._countdownTimerFunction = setInterval( () => this._doCountdownTimer(), 1000);
-          }
-          else if (this._countdownTimerFunction)
-          {
-            // timer finished, so stop callback
-              this._showCountdownTimer(false);
-              clearInterval(this._countdownTimerFunction);
-              this._countdownTimerFunction = null;
-          }
-        }
-        this._previousTimerState = this.myhass.states[this._config.timer_entity].state;
       }
       
       const updatedEntitiesReady = this._confirmEntitiesReady();
@@ -138,20 +114,24 @@ class AlarmControlPanelCard extends HTMLElement {
     const root = this.shadowRoot;
     const card = root.lastChild;
     const config = this._config;
-
-    if (this._config.timer_entity &&  this._previousAlarmState != this._state) {
-      if (this._state === "disarmed") {
-        // cancel timer
-        this.myhass.callService('timer', 'finish', {
-          entity_id: this._config.timer_entity
-        });
+ 
+    if (config.show_countdown_timer && this._previousAlarmState != this._state) {
+      // alarm only changes whether its publishing state_duration when the state changes.
+      // if alarm is currently publishing a state_duration, then
+      // start a countdown timer if we haven't already.
+      // if it's not publishing a state_duration, and we are
+      // showing then countdown timer, then end/hide it
+      if (entity.attributes.state_duration) {
+        if (this._countdownTimerFunction == null) {
+          this._showCountdownTimer(true);
+          this._doCountdownTimer();	// draw once right away
+          this._countdownTimerFunction = setInterval( () => this._doCountdownTimer(), 1000);
+        }
+      } else if (this._countdownTimerFunction) {
+        // timer finished, so stop callback
         this._showCountdownTimer(false);
-      }
-      else if (this._state === "pending") {
-		// respond to alarm going pending (door/window opened) by starting countdown timer
-  //    const countdownTime = this.myhass.states[this._config.timer_entity].attributes.armed_away.pending_time;    // todo get actual time from alarm panel state
-        const countdownTimeSecs = 30;
-        this._startCountdownTimer(countdownTimeSecs);
+        clearInterval(this._countdownTimerFunction);
+        this._countdownTimerFunction = null;
       }
     }
     
@@ -232,7 +212,7 @@ class AlarmControlPanelCard extends HTMLElement {
   
   _timerCanvas() {
     // radius 30.  strokewidth = radius/4. width = 2*radius + strokewidth * 2
-    if (this._config.timer_entity) {
+    if (this._config.show_countdown_timer) {
       return `
         <countdown-timer id='countdown'>
           <canvas id="timerCanvas" width="${this._timerSize}" height="${this._timerSize}">
@@ -254,8 +234,9 @@ class AlarmControlPanelCard extends HTMLElement {
 
   _doCountdownTimer() {
     const now = new Date().getTime();
-    const madeActive = new Date(this.myhass.states[this._config.timer_entity].last_changed).getTime();
-    const durationSeconds =  this._durationToSeconds(this.myhass.states[this._config.timer_entity].attributes.remaining);
+    const madeActive = new Date(this.myhass.states[this._config.entity].last_changed).getTime();
+
+    const durationSeconds = this.myhass.states[this._config.entity].attributes.state_duration;
     const elapsedSeconds = (now - madeActive) / 1000;
     const timeRemaining = Math.round(Math.max(durationSeconds - elapsedSeconds, 0));
     const elapsedPercent = elapsedSeconds / durationSeconds;
@@ -333,10 +314,6 @@ class AlarmControlPanelCard extends HTMLElement {
           const input = card.querySelector('paper-input');
           const value = input ? input.value : '';
           this._callService(element.id, value);
-
-//        const countdownTime = this.myhass.states[this._config.timer_entity].attributes.armed_away.arming_time;    // todo get actual time from alarm panel state
-          const countdownTimeSecs = element.id === 'arm_away' ? 60 : 0;
-          this._startCountdownTimer(countdownTimeSecs)
         })
       })
     }
@@ -353,24 +330,13 @@ class AlarmControlPanelCard extends HTMLElement {
 
   _showCountdownTimer(show)
   {
-    if (this._config.timer_entity)
+    if (this._config.show_countdown_timer)
       this.shadowRoot.getElementById("countdown").style.display = show ? '' : 'none';
     else
       show = false;
     this.shadowRoot.getElementById("badge-icon").style.display = show ? 'none' : '';
   }
-  
-  _startCountdownTimer(countdownTimeSecs)
-  {
-    if (this._config.timer_entity && countdownTimeSecs != 0) {
-      this._showCountdownTimer(true);
-      this.myhass.callService('timer', 'start', {
-        entity_id: this._config.timer_entity,
-        duration: countdownTimeSecs
-      });
-    }
-  }
-  
+
   _setupInput() {
     if (this._config.auto_enter) {
       const input = this.shadowRoot.lastChild.querySelector("paper-input");

@@ -6,11 +6,6 @@ default_config:
 input_text:
   trigger_source:
     name: Trigger Source
-  
-# use alarm_timer for global persistent time remaining across multiple alarm_control_panel-card instances
-timer:
-  alarm_timer:
-    duration: 60 # this will be changed by the alarm_control_panel-card on state changes
 
 # configure manual alarm
 alarm_control_panel:
