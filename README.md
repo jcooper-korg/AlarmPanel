@@ -2,7 +2,7 @@
 
 This custom alarm panel card was forked in September 2020 from [Kevin Cooper's repo](https://github.com/JumpMaster/custom-lovelace) (no relation). 
 
-I have also included my complete working [manual alarm control panel](https://www.home-assistant.io/integrations/manual/) configuration, automations, script, lovelace dashboard, etc in the [ExampleConfig](https://github.com/jcooper-korg/AlarmPanel/tree/master/ExampleConfig) folder.
+I have included my complete working [manual alarm control panel](https://www.home-assistant.io/integrations/manual/) configuration, automations, script, lovelace dashboard, etc in the [ExampleConfig](https://github.com/jcooper-korg/AlarmPanel/tree/master/ExampleConfig) folder.
 
 ## Card Modification Goals 
 
@@ -81,5 +81,9 @@ My config files are in the [ExampleConfig](https://github.com/jcooper-korg/Alarm
 	* triggering the alarm on smoke sensors, regardless of arming state
 * In order to include the name of the entity that triggered the alarm in the trigger notifications, I'm using an input_text entity in my config, which is set when the alarm trigger automation runs, and is then referenced by the notification
 * In order to be able to trigger the alarm immediately for some sensors, while other sensors (e.g. entry doors) are delayed, I have a script called `trigger_alarm_immediately` which first disarms the alarm, and then triggers. Requires that the the `delay_time` is set to 0 for the disarmed state in the `alarm_control_panel` configuration.
-* To show a countdown timer when arming/pending, an update to the manual alaram component is required (to publish the state_duration). I have sent a pull request, but meanwhile the [custom component can be found here](https://github.com/jcooper-korg/core/tree/dev/homeassistant/components/manual). Install it in your `config/custom_components/manual` folder.
 * I created a separate user named Alarm Panel that I use to log in from my wall mounted tablet. I'm using [Custom Header](https://maykar.github.io/custom-header) to hide the sidebar and title bar on the wall mounted tablet for that user.
+
+## Credit
+
+* This custom alarm panel card was forked in September 2020 from [Kevin Cooper's repo](https://github.com/JumpMaster/custom-lovelace) (no relation). 
+* The appearance of the countdown timer was inspired by [John Schult's countdown360 project](https://github.com/johnschult/jquery.countdown360).
