@@ -406,12 +406,6 @@ class AlarmControlPanelCard extends HTMLElement {
       </div>`
   }
 
-  _confirmEntities() {
-    if (this._config.confirm_entities) return '';
-
-
-  }
-
   _confirmEntitiesReady() {
     if (!this._config.confirm_entities) return true;
     for (var i = 0; i < this._config.confirm_entities.length; i++) {
