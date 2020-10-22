@@ -77,13 +77,13 @@ My config files are in the [ExampleConfig](https://github.com/jcooper-korg/Alarm
 	* confirm_entities list of sensors, so that it shows "Ready" if they're all off, or "Not ready" if any are on
 * I have set up automations to handle:
 	* turning on/off the green/red LEDs, beeper, and siren based on sensor entity states and the manual `alarm_control_panel` armed/disarmed/triggered state
-	* notifying our iphone's when armed / disarmed or when triggered
+	* notifying our iphones when armed / disarmed or when triggered
 	* triggering the alarm on smoke sensors, regardless of arming state
 * In order to include the name of the entity that triggered the alarm in the trigger notifications, I'm using an input_text entity in my config, which is set when the alarm trigger automation runs, and is then referenced by the notification
 * In order to be able to trigger the alarm immediately for some sensors, while other sensors (e.g. entry doors) are delayed, I have a script called `trigger_alarm_immediately` which first disarms the alarm, and then triggers. Requires that the the `delay_time` is set to 0 for the disarmed state in the `alarm_control_panel` configuration.
 * I created a separate user named Alarm Panel that I use to log in from my wall mounted tablet. I'm using [Custom Header](https://maykar.github.io/custom-header) to hide the sidebar and title bar on the wall mounted tablet for that user.
 
-## Credit
+## Credits
 
 * This custom alarm panel card was forked in September 2020 from [Kevin Cooper's repo](https://github.com/JumpMaster/custom-lovelace) (no relation). 
 * The appearance of the countdown timer was inspired by [John Schult's countdown360 project](https://github.com/johnschult/jquery.countdown360).
