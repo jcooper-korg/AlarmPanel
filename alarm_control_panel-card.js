@@ -171,12 +171,18 @@ class AlarmControlPanelCard extends HTMLElement {
 
     const armVisible = (this._state === 'disarmed');
     root.getElementById("arm-actions").style.display = armVisible ? "" : "none";
-    root.getElementById("disarm-actions").style.display = armVisible ? "none" : "";
-
+    if (!config.hide_keypad && entity.attributes.code_format) {
+        root.getElementById("disarm-actions").style.display = armVisible ? "none" : "";
+    }
+    
     // hide code and number pad if disarmed, if manual alarm config has code_arm_required=false
     if (!this.code_arm_required) {
+      if (!config.hide_keypad) {
         root.getElementById("keypad").style.display = armVisible ? "none" : "flex";
+      }
+      if (entity.attributes.code_format) {
         root.getElementById("input-code").style.display = armVisible ? "none" : "";
+      }
     }
   }
 
