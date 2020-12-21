@@ -42,7 +42,7 @@ class AlarmControlPanelCard extends HTMLElement {
     if (entity) {
       this.myhass = hass;
       this.code_arm_required = entity.attributes.code_arm_required;
-
+      this.has_numeric_code = !entity.attributes.code_format || entity.attributes.code_format == "number";
       if(!this.shadowRoot.lastChild) {
         this._createCard(entity);
       }
@@ -72,7 +72,7 @@ class AlarmControlPanelCard extends HTMLElement {
     content.style.display = config.auto_hide ? 'none' : '';
     content.innerHTML = `
       ${this._actionButtons()}
-      ${entity.attributes.code_format ?
+      ${this.has_numeric_code ?
           `<paper-input id="input-code" label='${this._label("ui.card.alarm_control_panel.code")}'
           type="password"></paper-input>` : ''}
       ${this._keypad(entity)}
@@ -171,7 +171,7 @@ class AlarmControlPanelCard extends HTMLElement {
 
     const armVisible = (this._state === 'disarmed');
     root.getElementById("arm-actions").style.display = armVisible ? "" : "none";
-    if (!config.hide_keypad && entity.attributes.code_format) {
+    if (!config.hide_keypad && this.has_numeric_code) {
         root.getElementById("disarm-actions").style.display = armVisible ? "none" : "";
     }
     
@@ -180,7 +180,7 @@ class AlarmControlPanelCard extends HTMLElement {
       if (!config.hide_keypad) {
         root.getElementById("keypad").style.display = armVisible ? "none" : "flex";
       }
-      if (entity.attributes.code_format) {
+      if (this.has_numeric_code) {
         root.getElementById("input-code").style.display = armVisible ? "none" : "";
       }
     }
@@ -387,7 +387,7 @@ class AlarmControlPanelCard extends HTMLElement {
   }
 
   _keypad(entity) {
-    if (this._config.hide_keypad || !entity.attributes.code_format) return '';
+    if (this._config.hide_keypad || !this.has_numeric_code) return '';
 
     return `
       <div id="keypad" class="pad">
