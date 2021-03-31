@@ -36,7 +36,7 @@ To use this card in Home Assistant:
 	* The Url of the file will be `/local/alarm_control_panel-card.js`, and the type is "JavaScript Module".  
 	* If you are making local modifications to the file, you can add a version number to the end of the Url, like `/local/alarm_control_panel-card.js?v=3` and increment the number each time you make a change, to force it to use the new version instead of your browser cached version.
 * add the alarm panel to your lovelace view using a Manual card, with type set as `type: 'custom:alarm_control_panel-card'` (see my [example config](https://github.com/jcooper-korg/AlarmPanel/blob/master/ExampleConfig/AlarmLovelaceDashboard.yaml))
-* to use the countdown timer, you must have an updated manual alarm component. I have sent a pull request for the changes, but while waiting on that, the [custom component can be found here](https://github.com/jcooper-korg/core/tree/dev/homeassistant/components/manual). Install it in your `config/custom_components/manual` folder.
+* to use the countdown timer, you must install my modified manual alarm component as a custom component. Download the three files [from here](https://github.com/jcooper-korg/AlarmPanel/tree/master/manual), and copy them into a `custom_components/manual` subdirectory of your configuration directory (creating the directories as necessary).
 
 ## Card configuration options
 
