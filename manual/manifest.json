@@ -1,0 +1,8 @@
+{
+  "domain": "manual",
+  "name": "Manual",
+  "documentation": "https://www.home-assistant.io/integrations/manual",
+  "codeowners": [],
+  "quality_scale": "internal",
+  "version": "1.0.0"
+}
