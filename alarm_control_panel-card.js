@@ -102,9 +102,9 @@ class AlarmControlPanelCard extends HTMLElement {
       }
       this._arm_action = config.auto_enter.arm_action;
     }
-    if (!config.states) config.states = ['arm_away', 'arm_home'];
-    if (!config.scale) config.scale = '15px';
     this._config = Object.assign({}, config);
+    if (!this._config.states) this._config.states = ['arm_away', 'arm_home'];
+    if (!this._config.scale) this._config.scale = '15px';
 
     const root = this.shadowRoot;
     if (root.lastChild) root.removeChild(root.lastChild);
