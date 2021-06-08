@@ -10,10 +10,6 @@
 //
 // if alarm_control_panel.code_arm_required, the keypad will be hidden when disarmed, regardless of the
 // hide_keypad and auto_hide options.
-//
-// the auto_enter feature only appears to work if the alarm_control_panel.code_arm_required is true
-// and if you use a template to have different codes for disarm/arm.
-// maybe this auto_enter feature should be removed?
 
 class AlarmControlPanelCard extends HTMLElement {
   constructor() {
@@ -100,7 +96,7 @@ class AlarmControlPanelCard extends HTMLElement {
         throw new
           Error('Specify both code_length and arm_action when using auto_enter.');
       }
-      this._arm_action = config.auto_enter.arm_action;
+      this._autoarm_action = config.auto_enter.arm_action;
     }
     this._config = Object.assign({}, config);
     if (!this._config.states) this._config.states = ['arm_away', 'arm_home'];
@@ -175,6 +171,23 @@ class AlarmControlPanelCard extends HTMLElement {
         root.getElementById("disarm-actions").style.display = armVisible ? "none" : "";
     }
     
+    if (config.auto_enter) {
+      if (armVisible) {
+          this._autoarm_action = config.auto_enter.arm_action;
+          root.querySelectorAll(".actions button").forEach(element => {
+            element.classList.remove('autoarm');
+            if (element.id === this._autoarm_action)
+              element.classList.add('autoarm');
+          })
+          root.getElementById("disarm").classList.remove('autoarm');
+      }
+      else
+      {
+          this._autoarm_action = 'disarm';
+          root.getElementById("disarm").classList.add('autoarm');
+      }
+    }
+    
     // hide code and number pad if disarmed, if manual alarm config has code_arm_required=false
     if (!this.code_arm_required) {
       if (!config.hide_keypad) {
@@ -185,12 +198,17 @@ class AlarmControlPanelCard extends HTMLElement {
       }
     }
   }
-
+  
   _actionButtons() {
+    let disarmButtonIfHideKeypad = '';
+    if (this._config.hide_keypad) {
+      disarmButtonIfHideKeypad = `<div id="disarm-actions" class="actions">${this._actionButton('disarm')}</div>`;
+    }
     return `
       <div id="arm-actions" class="actions">
         ${this._config.states.map(el => `${this._actionButton(el)}`).join('')}
-      </div>`;
+      </div>
+      ${disarmButtonIfHideKeypad}`
   }
 
   _stateIconLabel(state) {
@@ -299,30 +317,14 @@ class AlarmControlPanelCard extends HTMLElement {
       })
     }
 
-    if (config.auto_enter) {
-      card.querySelectorAll(".actions button").forEach(element => {
-        element.classList.remove('autoarm');
-        if (element.id === this._arm_action || element.id === 'disarm') {
-          element.classList.add('autoarm');
-        }
-        element.addEventListener('click', event => {
-          card.querySelectorAll(".actions button").forEach(element => {
-            element.classList.remove('autoarm');
-          })
-          element.classList.add('autoarm');
-          if (element.id !== 'disarm') this._arm_action = element.id;
-        })
+    card.querySelectorAll(".actions button").forEach(element => {
+      // note- disarm button is handled in _setupKeypad
+      element.addEventListener('click', event => {
+        const input = card.querySelector('paper-input');
+        const value = input ? input.value : '';
+        this._callService(element.id, value);
       })
-    } else {
-      card.querySelectorAll(".actions button").forEach(element => {
-        // note- disarm button is handled in _setupKeypad
-        element.addEventListener('click', event => {
-          const input = card.querySelector('paper-input');
-          const value = input ? input.value : '';
-          this._callService(element.id, value);
-        })
-      })
-    }
+    })
   }
 
   _callService(service, code) {
@@ -380,8 +382,7 @@ class AlarmControlPanelCard extends HTMLElement {
       const card = this.shadowRoot.lastChild;
       const code = card.querySelector("paper-input").value;
       if (code.length == config.auto_enter.code_length) {
-        const service = card.querySelector(".actions .autoarm").id;
-        this._callService(service, code);
+        this._callService(this._autoarm_action, code);
       }
     }
   }
@@ -409,7 +410,7 @@ class AlarmControlPanelCard extends HTMLElement {
           ${this._keypadButton("9", "WXYZ")}
           <div id="disarm-actions">${this._actionButton('disarm')}</div>
         </div>
-      </div>`
+      </div>`;
   }
 
   _confirmEntitiesReady() {
@@ -594,6 +595,10 @@ class AlarmControlPanelCard extends HTMLElement {
         #color: var(--primary-color);
         color: var(--primary-text-color);
       }
+      .pad .autoarm {
+        background: var(--alarm-color-autoarm) !important;
+      }
+
       .pad button:focus {
         border-color: var(--dark-primary-color);
         outline: none;
@@ -635,7 +640,7 @@ class AlarmControlPanelCard extends HTMLElement {
         color: var(--primary-text-color);
       }
       .actions .autoarm {
-        background: var(--alarm-color-autoarm);
+        background: var(--alarm-color-autoarm) !important;
       }
       button#disarm {
         color: var(--google-red-500);
