@@ -35,7 +35,7 @@ To use this card in Home Assistant:
 	* Turn on Advanced Mode in your user profile if you can't see the Resources tab. 
 	* The Url of the file will be `/local/alarm_control_panel-card.js`, and the type is "JavaScript Module".  
 	* If you are making local modifications to the file, you can add a version number to the end of the Url, like `/local/alarm_control_panel-card.js?v=3` and increment the number each time you make a change, to force it to use the new version instead of your browser cached version.
-* add the alarm panel to your lovelace view using a Manual card, with type set as `type: 'custom:alarm_control_panel-card'` and specify your alarm_control_panel entity as named in your configuration.yaml (e.g. `entity: alarm_control_panel.house`). See my [example config](https://github.com/jcooper-korg/AlarmPanel/blob/master/ExampleConfig/AlarmLovelaceDashboard.yaml).
+* add the alarm panel to your lovelace view using a Manual card, with type set as `type: 'custom:alarm_control_panel-card'` and specify your alarm\_control\_panel entity as named in your configuration.yaml (e.g. `entity: alarm_control_panel.house`). See my [example AlarmLovelaceDashboard yaml configs](https://github.com/jcooper-korg/AlarmPanel/blob/master/ExampleConfig).
 * to use the countdown timer, you must install my modified manual alarm component as a custom component. Download the three files [from here](https://github.com/jcooper-korg/AlarmPanel/tree/master/manual), and copy them into a `custom_components/manual` subdirectory of your configuration directory (creating the directories as necessary).
 
 ## Card configuration options
@@ -71,12 +71,12 @@ My config files are in the [ExampleConfig](https://github.com/jcooper-korg/Alarm
 * My Alarm lovelace dashboard has two cards- the new custom alarm panel card, and a [Conditional Card](https://www.home-assistant.io/lovelace/conditional) which shows when any of the door/window sensors is opened, while disarmed.
 * I have configured the custom card with:
 	* label replacements to use shorter all-caps words for the AWAY, HOME, etc.
-	* confirm_entities list of sensors, so that it shows "Ready" if they're all off, or "Not ready" if any are on
+	* confirm\_entities list of sensors, so that it shows "Ready" if they're all off, or "Not ready" if any are on
 * I have set up automations to handle:
 	* turning on/off the green/red LEDs, beeper, and siren based on sensor entity states and the manual `alarm_control_panel` armed/disarmed/triggered state
 	* notifying our iphones when armed / disarmed or when triggered
 	* triggering the alarm on smoke sensors, regardless of arming state
-* In order to include the name of the entity that triggered the alarm in the trigger notifications, I'm using an input_text entity in my config, which is set when the alarm trigger automation runs, and is then referenced by the notification
+* In order to include the name of the entity that triggered the alarm in the trigger notifications, I'm using an input\_text entity in my config, which is set when the alarm trigger automation runs, and is then referenced by the notification
 * In order to be able to trigger the alarm immediately for some sensors, while other sensors (e.g. entry doors) are delayed, I have a script called `trigger_alarm_immediately` which first disarms the alarm, and then triggers. Requires that the the `delay_time` is set to 0 for the disarmed state in the `alarm_control_panel` configuration.
 * I created a separate user named Alarm Panel that I use to log in from my wall mounted tablet. I'm using [Custom Header](https://maykar.github.io/custom-header) to hide the sidebar and title bar on the wall mounted tablet for that user.
 
