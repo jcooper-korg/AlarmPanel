@@ -428,7 +428,7 @@ class AlarmControlPanelCard extends HTMLElement {
       letterHTML = `<div class='alpha'>${alpha}</div>`
     }
     if (id == '') id = button;
-    return `<button id="${id}" value="${button}">${button}${letterHTML}</button>`;
+    return `<button id="key${id}" value="${button}">${button}${letterHTML}</button>`;
   }
 
   _style(icon_style, entity) {
