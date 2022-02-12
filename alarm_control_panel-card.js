@@ -134,10 +134,21 @@ class AlarmControlPanelCard extends HTMLElement {
     const state_str = "state.alarm_control_panel." + this._state;
     status = this._label(state_str);
     if (config.confirm_entities && this._state === "disarmed") {
-      if (this._entitiesReady)
+      if (this._entitiesReady) {
         status = status + " - " + this._label("ready");
-      else
+        if (config.disable_arm_if_not_ready) {
+          root.querySelectorAll(".actions button").forEach(element => {
+            element.removeAttribute("disabled");
+          })
+        }
+      } else {
         status = status + " - " + this._label("not_ready");
+        if (config.disable_arm_if_not_ready) {
+          root.querySelectorAll(".actions button").forEach(element => {
+            element.setAttribute("disabled", true);
+          })
+        }
+      }
     }
     
     if (config.title) {
@@ -173,13 +184,16 @@ class AlarmControlPanelCard extends HTMLElement {
     
     if (config.auto_enter) {
       if (armVisible) {
+        if (!config.confirm_entities || !config.disable_arm_if_not_ready || this._entitiesReady)
           this._autoarm_action = config.auto_enter.arm_action;
-          root.querySelectorAll(".actions button").forEach(element => {
-            element.classList.remove('autoarm');
-            if (element.id === this._autoarm_action)
-              element.classList.add('autoarm');
-          })
-          root.getElementById("disarm").classList.remove('autoarm');
+        else
+          this._autoarm_action = "disabled";
+        root.querySelectorAll(".actions button").forEach(element => {
+        element.classList.remove('autoarm');
+        if (element.id === this._autoarm_action)
+          element.classList.add('autoarm');
+        })
+        root.getElementById("disarm").classList.remove('autoarm');
       }
       else
       {
@@ -381,7 +395,7 @@ class AlarmControlPanelCard extends HTMLElement {
     if (config.auto_enter) {
       const card = this.shadowRoot.lastChild;
       const code = card.querySelector("paper-input").value;
-      if (code.length == config.auto_enter.code_length) {
+      if (code.length == config.auto_enter.code_length && this._autoarm_action != "disabled") {
         this._callService(this._autoarm_action, code);
       }
     }
@@ -638,6 +652,11 @@ class AlarmControlPanelCard extends HTMLElement {
         border-color: var(--primary-text-color);
         background-color: var(--primary-color);
         color: var(--primary-text-color);
+      }
+      button:disabled,
+      button[disabled] {
+       background-color: #cccccc;
+        color: #666666;
       }
       .actions .autoarm {
         background: var(--alarm-color-autoarm) !important;

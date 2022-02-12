@@ -26,6 +26,7 @@ views:
           - binary_sensor.living_room_motion
         entity: alarm_control_panel.house
         show_countdown_timer: true
+        disable_arm_if_not_ready: true
         labels:
           ui.card.alarm_control_panel.arm_away: AWAY
           ui.card.alarm_control_panel.arm_home: HOME

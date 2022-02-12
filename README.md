@@ -50,6 +50,7 @@ The card options are:
 * `title`: (optional string) if provided will show this title at the top of the card, and the alarm state will be below it. if not provided, will show the alarm state as the title (which saves some vertical space, if you are space constrained, like on a wall tablet)
 * `states`: (optional list). list of arming states to support. Default is `armed_away` and `armed_home`. If you use more than two, you may need to adjust the `.actions button` widths 
 * `confirm_entities`: (optional list) a list of sensors which will be continuously monitored when disarmed so it can show Ready/Not ready text in the car header
+* `disable_arm_if_not_ready`: (optional boolean) if `confirm_entities` is provided, this will disable the arm buttons and auto_enter action unless all the listed sensors are ready
 * `labels`: (optional list) list of text replacements, allowing you to customize the text that is shown for `ui.card.alarm_control_panel.arm_away`, `ui.card.alarm_control_panel.arm_home`, `ui.card.alarm_control_panel.clear_code`, `ready` and `not_ready` 
 * `display_letters`: (optional boolean) shows letters on number pad buttons, like a telephone keypad
 * `style`: (optional string) this text will be appended to the card css style, allowing you to override colors, etc. Also see [Thomas Loven's card mod](https://github.com/thomasloven/lovelace-card-mod)
