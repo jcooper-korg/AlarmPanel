@@ -1,7 +1,7 @@
 // Alarm Control Panel custom card
 // Orignally by Kevin Cooper (no relation) at https://github.com/JumpMaster/custom-lovelace
 // Modified by John S Cooper at https://github.com/jcooper-korg/AlarmPanel
-// customized button appearance and colors, hide keypad when disarmed if !code_arm_required, new confirm_entities config option, etc
+// customized button appearance and colors, hide keypad when disarmed if !code_arm_required, new confirm_entities, home_entities, night_entities config option, etc
 // See example config at https://github.com/jcooper-korg/AlarmPanel/ExampleConfig
 //
 // if confirm_entities is provided, then when disarmed, it will show "Ready" in
@@ -9,7 +9,7 @@
 // (can customize those strings in the labels config using ready and not_ready)
 //
 // if alarm_control_panel.code_arm_required, the keypad will be hidden when disarmed, regardless of the
-// hide_keypad and auto_hide options.
+// hide_keypad and auto_hide options. If code_arm_required_overide is set, code_arm_required can be specified in the config file
 
 class AlarmControlPanelCard extends HTMLElement {
   constructor() {
@@ -24,7 +24,9 @@ class AlarmControlPanelCard extends HTMLElement {
       'pending': 'mdi:shield-outline',
       'triggered': 'hass:bell-ring',
     }
-    this._entitiesReady = false;
+    this._nightEntitiesReady = true;
+    this._homeEntitiesReady = true;
+    this._awayEntitiesReady = true;
     this._previousAlarmState = 'disarmed';
     this._countdownTimerFunction = null;
     this._timerRadius = 30;
@@ -43,11 +45,10 @@ class AlarmControlPanelCard extends HTMLElement {
         this._createCard(entity);
       }
       
-      const updatedEntitiesReady = this._confirmEntitiesReady();
-      if (entity.state != this._state || this._entitiesReady != updatedEntitiesReady) {
+      const entitiesReadyChanged = this._confirmEntitiesReady();
+      if (entity.state != this._state || entitiesReadyChanged) {
         this._previousAlarmState = this._state;
         this._state = entity.state;
-        this._entitiesReady = updatedEntitiesReady;
         this._updateCardContent(entity);
       }
     }
@@ -55,6 +56,9 @@ class AlarmControlPanelCard extends HTMLElement {
 
   _createCard(entity) {
     const config = this._config;
+    if (config.code_arm_required_overide) {
+      this.code_arm_required = config.code_arm_required;
+    }
 
     const card = document.createElement('ha-card');
     card.innerHTML = `
@@ -110,6 +114,10 @@ class AlarmControlPanelCard extends HTMLElement {
     const root = this.shadowRoot;
     const card = root.lastChild;
     const config = this._config;
+
+    if (config.code_arm_required_overide) {
+      this.code_arm_required = config.code_arm_required;
+    }
  
     if (config.show_countdown_timer && this._previousAlarmState != this._state) {
       // alarm only changes whether its publishing state_duration when the state changes.
@@ -134,19 +142,42 @@ class AlarmControlPanelCard extends HTMLElement {
     const state_str = "state.alarm_control_panel." + this._state;
     status = this._label(state_str);
     if (config.confirm_entities && this._state === "disarmed") {
-      if (this._entitiesReady) {
+      //Change label only for away state
+      if (this._awayEntitiesReady) {
         status = status + " - " + this._label("ready");
-        if (config.disable_arm_if_not_ready) {
-          root.querySelectorAll(".actions button").forEach(element => {
-            element.removeAttribute("disabled");
-          })
-        }
       } else {
         status = status + " - " + this._label("not_ready");
-        if (config.disable_arm_if_not_ready) {
-          root.querySelectorAll(".actions button").forEach(element => {
+      }
+
+      if (config.disable_arm_if_not_ready) {
+        //Away
+        var element = root.getElementById("arm_away");
+        if (element) {
+          if (this._awayEntitiesReady) {
+            element.removeAttribute("disabled");
+          } else {
             element.setAttribute("disabled", true);
-          })
+          }
+        }
+
+        //Home
+        element = root.getElementById("arm_home");
+        if (element) {
+          if (this._homeEntitiesReady) {
+            element.removeAttribute("disabled");
+          } else {
+            element.setAttribute("disabled", true);
+          }
+        }
+
+        //Night
+        element = root.getElementById("arm_night");
+        if (element) {
+          if (this._nightEntitiesReady) {
+            element.removeAttribute("disabled");
+          } else {
+            element.setAttribute("disabled", true);
+          }
         }
       }
     }
@@ -184,15 +215,18 @@ class AlarmControlPanelCard extends HTMLElement {
     
     if (config.auto_enter) {
       if (armVisible) {
-        if (!config.confirm_entities || !config.disable_arm_if_not_ready || this._entitiesReady)
+        if (!config.confirm_entities || !config.disable_arm_if_not_ready || this._awayEntitiesReady)
           this._autoarm_action = config.auto_enter.arm_action;
         else
           this._autoarm_action = "disabled";
-        root.querySelectorAll(".actions button").forEach(element => {
-        element.classList.remove('autoarm');
-        if (element.id === this._autoarm_action)
-          element.classList.add('autoarm');
-        })
+        
+        var element = root.getElementById("arm_away");
+        if (element) {
+          element.classList.remove('autoarm');
+          if (element.id === this._autoarm_action)
+            element.classList.add('autoarm');
+        }
+        
         root.getElementById("disarm").classList.remove('autoarm');
       }
       else
@@ -428,12 +462,50 @@ class AlarmControlPanelCard extends HTMLElement {
   }
 
   _confirmEntitiesReady() {
-    if (!this._config.confirm_entities) return true;
-    for (var i = 0; i < this._config.confirm_entities.length; i++) {
-       if (this.myhass.states[this._config.confirm_entities[i]].state != "off")
-         return false;
+    var entitiesChanged = false;
+    //Away
+    var newAwayEntities = true;
+    if (this._config.confirm_entities) {
+      for (var i = 0; i < this._config.confirm_entities.length; i++) {
+        if (this.myhass.states[this._config.confirm_entities[i]].state != "off") {
+          newAwayEntities = false;
+        }
+      }
+      if (newAwayEntities != this._awayEntitiesReady) {
+        this._awayEntitiesReady = newAwayEntities;
+        entitiesChanged = true;
+      }
     }
-    return true;
+
+    //Home
+    var newHomeEntities = true;
+    if (this._config.home_entities) {
+      for (var i = 0; i < this._config.home_entities.length; i++) {
+        if (this.myhass.states[this._config.home_entities[i]].state != "off") {
+          newHomeEntities = false;
+        }
+      }
+      if (newHomeEntities != this._homeEntitiesReady) {
+        this._homeEntitiesReady = newHomeEntities;
+        entitiesChanged = true;
+      }
+    }
+
+    //Night
+    var newNightEntities = true;
+    if (this._config.night_entities) {
+      for (var i = 0; i < this._config.night_entities.length; i++) {
+        if (this.myhass.states[this._config.night_entities[i]].state != "off") {
+          newNightEntities = false;
+        }
+      }
+      if (newNightEntities != this._nightEntitiesReady) {
+        this._nightEntitiesReady = newNightEntities;
+        entitiesChanged = true;
+      }
+    }
+
+    return entitiesChanged;
   }
 
   _keypadButton(button, alpha, id='') {
@@ -641,18 +713,19 @@ class AlarmControlPanelCard extends HTMLElement {
       .actions button {
         font-size: calc(var(--base-unit) * 1.5);
         font-weight: 700;
-        width: calc(var(--base-unit) * 11);
-        height: calc(var(--base-unit) * 6);
+        width: calc(var(--base-unit) * 6);
+        height: calc(var(--base-unit) * 4);
         margin-top: 0px;
         margin-right: 12px;
         margin-bottom: 0px;
-        margin-left: 12px;
+        margin-left: 18px;
         border-width: 2px;
         border-style: solid;
         border-color: var(--primary-text-color);
         background-color: var(--primary-color);
         color: var(--primary-text-color);
       }
+
       button:disabled,
       button[disabled] {
        background-color: #cccccc;
