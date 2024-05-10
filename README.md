@@ -1,5 +1,8 @@
 # Custom Alarm Panel Card
 
+NOTE: May 2024. This card was last tested working ok with Home Assistant 2021.12.1. It is known to NOT work properly in Home Assistant 2024.5.2. Unfortunately, I haven't been regularly updating HA, so I'm not sure at what point it broke. I don't have time now to diagnose the problem, so please consider this repo unmaintained and unsupported, until further notice.
+
+
 This custom alarm panel card was forked in September 2020 from [Kevin Cooper's repo](https://github.com/JumpMaster/custom-lovelace) (no relation). 
 
 I have included my complete working [manual alarm control panel](https://www.home-assistant.io/integrations/manual/) configuration, automations, script, lovelace dashboard, etc in the [ExampleConfig](https://github.com/jcooper-korg/AlarmPanel/tree/master/ExampleConfig) folder.
@@ -85,3 +88,5 @@ My config files are in the [ExampleConfig](https://github.com/jcooper-korg/Alarm
 
 * This custom alarm panel card was forked in September 2020 from [Kevin Cooper's repo](https://github.com/JumpMaster/custom-lovelace) (no relation). 
 * The appearance of the countdown timer was inspired by [John Schult's countdown360 project](https://github.com/johnschult/jquery.countdown360).
+
+
