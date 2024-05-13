@@ -32,6 +32,9 @@ views:
           ui.card.alarm_control_panel.arm_home: HOME
           ui.card.alarm_control_panel.clear_code: CLEAR
           ui.card.alarm_control_panel.disarm: DISARM
+        durations:
+          arming: 60
+          pending: 30
         scale: 14px
         states:
           - arm_home

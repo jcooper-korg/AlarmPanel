@@ -30,6 +30,7 @@ class AlarmControlPanelCard extends HTMLElement {
     this._timerRadius = 30;
     this._timerStrokeWidth = this._timerRadius / 5;
     this._timerSize = 2 * (this._timerRadius + this._timerStrokeWidth);
+    this._currentStateDuration = 0;
   }
 
   set hass(hass) {
@@ -112,19 +113,21 @@ class AlarmControlPanelCard extends HTMLElement {
     const config = this._config;
  
     if (config.show_countdown_timer && this._previousAlarmState != this._state) {
-      // alarm only changes whether its publishing state_duration when the state changes.
-      // if alarm is currently publishing a state_duration, then
-      // start a countdown timer if we haven't already.
-      // if it's not publishing a state_duration, and we are
-      // showing then countdown timer, then end/hide it
-      if (entity.attributes.state_duration) {
+      // if changing state to arming or pending, and a duration is specified in the config, then start a countdown timer
+      if (this._state == "arming" || this._state == "pending")
+      {
         if (this._countdownTimerFunction == null) {
-          this._showCountdownTimer(true);
-          this._doCountdownTimer();	// draw once right away
-          this._countdownTimerFunction = setInterval( () => this._doCountdownTimer(), 1000);
+          if (this._config.durations && this._config.durations[this._state] && this._config.durations[this._state] != 0)
+          {
+            this._currentStateDuration = this._config.durations[this._state];
+            this._showCountdownTimer(true);
+            this._doCountdownTimer();	// draw once right away
+            this._countdownTimerFunction = setInterval( () => this._doCountdownTimer(), 1000);
+          }
         }
-      } else if (this._countdownTimerFunction) {
-        // timer finished, so stop callback
+      }
+      else if (this._countdownTimerFunction) {
+        // stop callback, hide timer
         this._showCountdownTimer(false);
         clearInterval(this._countdownTimerFunction);
         this._countdownTimerFunction = null;
@@ -265,18 +268,11 @@ class AlarmControlPanelCard extends HTMLElement {
       ${this._label("ui.card.alarm_control_panel." + state)}</button>`;
   }
 
-  _durationToSeconds(duration) {
-    const parts = duration.split(":").map(Number);
-    return parts[0] * 3600 + parts[1] * 60 + parts[2];
-  }
-
   _doCountdownTimer() {
     const now = new Date().getTime();
     const madeActive = new Date(this.myhass.states[this._config.entity].last_changed).getTime();
-
-    const durationSeconds = this.myhass.states[this._config.entity].attributes.state_duration;
     const elapsedSeconds = (now - madeActive) / 1000;
-    const timeRemaining = Math.round(Math.max(durationSeconds - elapsedSeconds, 0));
+    const timeRemaining = Math.round(Math.max(this._currentStateDuration - elapsedSeconds, 0));
     const elapsedPercent = elapsedSeconds / durationSeconds;
 
     var canvas = this.shadowRoot.getElementById("timerCanvas");

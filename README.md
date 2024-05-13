@@ -13,7 +13,7 @@ I have included my complete working [manual alarm control panel](https://www.hom
 * high visibility and ergonomically sized buttons on web, iOS companion app, and wall mounted tablet
 * hide the key pad when disarmed (if `alarm_control_panel.code_arm_required` is off)
 * add a config option to show Ready / Not Ready when disarmed, monitoring a given list of entities
-* add a config option to show a countdown timer when arming or pending (see installation note for required custom manual component)
+* add a config option to show a countdown timer when arming or pending
 
 I changed the buttons from mwc-button to regular buttons. I couldn't find a reliable way to make the mwc-buttons larger (even using tools like [Thomas Loven's card mod](https://github.com/thomasloven/lovelace-card-mod)), and they were just much too small on a wall-mounted tablet.
 
@@ -39,7 +39,6 @@ To use this card in Home Assistant:
 	* The Url of the file will be `/local/alarm_control_panel-card.js`, and the type is "JavaScript Module".  
 	* If you are making local modifications to the file, you can add a version number to the end of the Url, like `/local/alarm_control_panel-card.js?v=3` and increment the number each time you make a change, to force it to use the new version instead of your browser cached version.
 * add the alarm panel to your lovelace view using a Manual card, with type set as `type: 'custom:alarm_control_panel-card'` and specify your alarm\_control\_panel entity as named in your configuration.yaml (e.g. `entity: alarm_control_panel.house`). See my [example AlarmLovelaceDashboard yaml configs](https://github.com/jcooper-korg/AlarmPanel/blob/master/ExampleConfig).
-* to use the countdown timer, you must install my modified manual alarm component as a custom component. Download the three files [from here](https://github.com/jcooper-korg/AlarmPanel/tree/master/manual), and copy them into a `custom_components/manual` subdirectory of your configuration directory (creating the directories as necessary).
 
 ## Card configuration options
 
@@ -49,6 +48,7 @@ The card options are:
 
 * `entity`: (required string) the name of the manual `alarm_control_panel` entity
 * `show_countdown_timer`: (optional boolean). default false. set to true to show countdown timer, or false to hide it. 
+* `durations`: (optional list) used in conjunction with `show_countdown_timer`. Specify a duration in seconds for the arming, and pending states. Should match the times you specified in your manual config.
 * `scale`: (optional string). default is 14px. increase/decrease the size of the buttons/text/etc by changing this number
 * `title`: (optional string) if provided will show this title at the top of the card, and the alarm state will be below it. if not provided, will show the alarm state as the title (which saves some vertical space, if you are space constrained, like on a wall tablet)
 * `states`: (optional list). list of arming states to support. Default is `armed_away` and `armed_home`. If you use more than two, you may need to adjust the `.actions button` widths 
@@ -76,6 +76,7 @@ My config files are in the [ExampleConfig](https://github.com/jcooper-korg/Alarm
 * I have configured the custom card with:
 	* label replacements to use shorter all-caps words for the AWAY, HOME, etc.
 	* confirm\_entities list of sensors, so that it shows "Ready" if they're all off, or "Not ready" if any are on
+	* countdown timer enabled and durations in seconds specified for arming (60) and pending (30) to match the arming_time and delay_time in the manual platform's armed_away config
 * I have set up automations to handle:
 	* turning on/off the green/red LEDs, beeper, and siren based on sensor entity states and the manual `alarm_control_panel` armed/disarmed/triggered state
 	* notifying our iphones when armed / disarmed or when triggered
