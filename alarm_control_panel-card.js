@@ -72,8 +72,8 @@ class AlarmControlPanelCard extends HTMLElement {
     content.innerHTML = `
       ${this._actionButtons()}
       ${this.has_numeric_code ?
-          `<paper-input id="input-code" label='${this._label("ui.card.alarm_control_panel.code")}'
-          type="password"></paper-input>` : ''}
+          `<ha-textfield id="input-code" label='${this._label("ui.card.alarm_control_panel.code")}'
+          type="password"></ha-textfield>` : ''}
       ${this._keypad(entity)}
     `;
 
@@ -332,7 +332,7 @@ class AlarmControlPanelCard extends HTMLElement {
     card.querySelectorAll(".actions button").forEach(element => {
       // note- disarm button is handled in _setupKeypad
       element.addEventListener('click', event => {
-        const input = card.querySelector('paper-input');
+        const input = card.querySelector('ha-textfield');
         const value = input ? input.value : '';
         this._callService(element.id, value);
       })
@@ -340,7 +340,7 @@ class AlarmControlPanelCard extends HTMLElement {
   }
 
   _callService(service, code) {
-    const input = this.shadowRoot.lastChild.querySelector("paper-input");
+    const input = this.shadowRoot.lastChild.querySelector("ha-textfield");
     this.myhass.callService('alarm_control_panel', `alarm_${service}`, {
       entity_id: this._config.entity,
       code: code,
@@ -359,7 +359,7 @@ class AlarmControlPanelCard extends HTMLElement {
 
   _setupInput() {
     if (this._config.auto_enter) {
-      const input = this.shadowRoot.lastChild.querySelector("paper-input");
+      const input = this.shadowRoot.lastChild.querySelector("ha-textfield");
       input.addEventListener('input', event => { this._autoEnter() })
     }
   }
@@ -367,7 +367,7 @@ class AlarmControlPanelCard extends HTMLElement {
   _setupKeypad() {
     const root = this.shadowRoot;
 
-    const input = root.lastChild.querySelector('paper-input');
+    const input = root.lastChild.querySelector('ha-textfield');
     root.querySelectorAll(".pad button").forEach(element => {
       if (element.getAttribute('value') ===
         this._label("ui.card.alarm_control_panel.clear_code")) {
@@ -392,7 +392,7 @@ class AlarmControlPanelCard extends HTMLElement {
 
     if (config.auto_enter) {
       const card = this.shadowRoot.lastChild;
-      const code = card.querySelector("paper-input").value;
+      const code = card.querySelector("ha-textfield").value;
       if (code.length == config.auto_enter.code_length && this._autoarm_action != "disabled") {
         this._callService(this._autoarm_action, code);
       }
@@ -568,12 +568,12 @@ class AlarmControlPanelCard extends HTMLElement {
 //          --ha-label-badge-color: rgba(255, 153, 0, 0.3);
 //        }
 //      }
-      paper-input {
-        justify-content: center;
+
+      ha-textfield {
+        display: block;
+        text-align: center;
         margin: auto;
-        max-width: 200px;
-        font-size: calc(var(--base-unit) * 3);
-        font-weight: bold;
+        max-width: 150px;
       }
       .state {
         margin-left: 20px;
