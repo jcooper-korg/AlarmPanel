@@ -1,11 +1,15 @@
 # Custom Alarm Panel Card
 
-NOTE: May 2024. This card was last tested working ok with Home Assistant 2021.12.1. It is known to NOT work properly in Home Assistant 2024.5.2. Unfortunately, I haven't been regularly updating HA, so I'm not sure at what point it broke. I don't have time now to diagnose the problem, so please consider this repo unmaintained and unsupported, until further notice.
-
-
 This custom alarm panel card was forked in September 2020 from [Kevin Cooper's repo](https://github.com/JumpMaster/custom-lovelace) (no relation). 
 
 I have included my complete working [manual alarm control panel](https://www.home-assistant.io/integrations/manual/) configuration, automations, script, lovelace dashboard, etc in the [ExampleConfig](https://github.com/jcooper-korg/AlarmPanel/tree/master/ExampleConfig) folder.
+
+## News
+
+This card was last tested working with Home Assistant 2024.5.2. HA occasionally makes breaking changes, and I don't constantly update my system so I may not notice if it becomes broken.
+
+Previous versions of this card included a custom version of the HA manual_alarm_panel component. This is no longer required. If you had installed a previous version of this card, you should remove it from `/config/custom_components/manual`. Optional backstory: I had modified that component to publish a state_duration attribute for use with my countdown timer. But the HA team [rejected my pull request](https://github.com/home-assistant/core/pull/41872), so I have since removed it, and now require the durations to specified in the card config, as detailed below. 
+ 
 
 ## Card Modification Goals 
 
