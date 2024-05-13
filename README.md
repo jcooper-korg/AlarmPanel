@@ -65,7 +65,7 @@ The card options are:
 My alarm setup consists of:
 
 * Home Assistant running on Hass.io, on a [Raspberry Pi 3b+](https://www.raspberrypi.org/products/raspberry-pi-3-model-b-plus/)
-* a wall-mounted 7" Amazon Fire Tablet, running [Fully Kiosk](https://www.fully-kiosk.com)
+* a wall-mounted 7" Amazon Fire Tablet, running [Fully Kiosk](https://www.fully-kiosk.com). NOTE: you may need to manually update the WebView component on older Fire tablets. Mine is a 7th Gen (2017), running FireOS 5.1.1, and the [latest compatible WebView is v110](https://amazon-system-webview.en.uptodown.com/android/versions)
 * the iOS [Home Assistant Companion](https://apps.apple.com/us/app/home-assistant/id1099568401)
 * an alarm panel kit from [Konnected.io](https://konnected.io/collections/shop-now) with various door/window/motion/smoke sensors, and a siren, beeper, and red/green LEDs
 

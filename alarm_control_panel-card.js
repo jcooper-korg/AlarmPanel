@@ -8,6 +8,8 @@
 // the status title if all those entities are off, otherwise it'll show "Not Ready".
 // (can customize those strings in the labels config using ready and not_ready)
 //
+// if show_countdown_timer is enabled, then the config should specify a list of durations (in seconds) for the arming and pending states
+//
 // if alarm_control_panel.code_arm_required, the keypad will be hidden when disarmed, regardless of the
 // hide_keypad and auto_hide options.
 
