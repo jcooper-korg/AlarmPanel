@@ -620,14 +620,10 @@ class AlarmControlPanelCard extends HTMLElement {
         background-color: var(--primary-color);
         font-size: calc(var(--base-unit) * 1.1);
       }
-      .pad button#clear {
+      .pad button#keyclear {
         border-color: red;
         font-size: calc(var(--base-unit) * 1.1);
         background-color: var(--primary-background-color);
-      }
-      .pad button#clear {
-        border-color: red;
-        font-size: calc(var(--base-unit) * 1.1);
       }
       .actions {
         margin: 0 8px;
@@ -653,7 +649,7 @@ class AlarmControlPanelCard extends HTMLElement {
       }
       button:disabled,
       button[disabled] {
-       background-color: #cccccc;
+        background-color: #cccccc;
         color: #666666;
       }
       .actions .autoarm {
