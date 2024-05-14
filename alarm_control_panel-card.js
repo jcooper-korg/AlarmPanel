@@ -271,10 +271,11 @@ class AlarmControlPanelCard extends HTMLElement {
   }
 
   _doCountdownTimer() {
-    const now = new Date().getTime();
-    const madeActive = new Date(this.myhass.states[this._config.entity].last_changed).getTime();
-    const elapsedSeconds = (now - madeActive) / 1000;
-    const timeRemaining = Math.round(Math.max(this._currentStateDuration - elapsedSeconds, 0));
+    const nowTime = new Date().getTime();
+    const timeMadeActive = new Date(this.myhass.states[this._config.entity].last_changed).getTime();
+    const elapsedSeconds = (nowTime - timeMadeActive) / 1000;
+    const durationSeconds = this._currentStateDuration;
+    const timeRemaining = Math.round(Math.max(durationSeconds - elapsedSeconds, 0));
     const elapsedPercent = elapsedSeconds / durationSeconds;
 
     var canvas = this.shadowRoot.getElementById("timerCanvas");
@@ -310,7 +311,6 @@ class AlarmControlPanelCard extends HTMLElement {
     ctx.textBaseline = "middle";
     ctx.fillStyle  = "white";
     ctx.fillText(timeRemaining, this._timerSize/2, this._timerSize/2);
-
   }
 
   _setupActions() {
