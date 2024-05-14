@@ -51,8 +51,7 @@ See the [ExampleConfig](https://github.com/jcooper-korg/AlarmPanel/tree/master/E
 The card options are:
 
 * `entity`: (required string) the name of the manual `alarm_control_panel` entity
-* `show_countdown_timer`: (optional boolean). default false. set to true to show countdown timer, or false to hide it. 
-* `durations`: (optional list) used in conjunction with `show_countdown_timer`. Specify a duration in seconds for the arming, and pending states. Should match the times you specified in your manual config.
+* `show_countdown_timer`: (optional boolean). default false. set to true to show countdown timer, or false to hide it.  If enabled, you must also configure the `durations` list, specifying a duration in seconds for the arming, and pending states. These times should match the times you specified in your manual config.
 * `scale`: (optional string). default is 14px. increase/decrease the size of the buttons/text/etc by changing this number
 * `title`: (optional string) if provided will show this title at the top of the card, and the alarm state will be below it. if not provided, will show the alarm state as the title (which saves some vertical space, if you are space constrained, like on a wall tablet)
 * `states`: (optional list). list of arming states to support. Default is `armed_away` and `armed_home`. If you use more than two, you may need to adjust the `.actions button` widths 
@@ -62,7 +61,7 @@ The card options are:
 * `display_letters`: (optional boolean) shows letters on number pad buttons, like a telephone keypad
 * `style`: (optional string) this text will be appended to the card css style, allowing you to override colors, etc. Also see [Thomas Loven's card mod](https://github.com/thomasloven/lovelace-card-mod)
 * `auto_hide`: (optional boolean) hides the keypad and action buttons. click on the badge to show/hide them.  
-* `auto_enter`: (optional object). you must also specify code\_length and arm\_action. This will automatically disarm or arm with the specified arm\_action when entering the code. When a code of the correct length is entered and the alarm is currently armed, the alarm will be disarmed. If `alarm_control_panel.code_arm_required` is on and the alarm is currently disarmed, and a code of the correct length is entered, the arm_action will be triggered (e.g. 'arm\_home' or 'arm\_away'). 
+* `auto_enter`: (optional object). you must also specify `code_length` and `arm_action`. This will automatically disarm or arm with the specified arm\_action when entering the code. When a code of the correct length is entered and the alarm is currently armed, the alarm will be disarmed. If `alarm_control_panel.code_arm_required` is on and the alarm is currently disarmed, and a code of the correct length is entered, the arm_action will be triggered (e.g. 'arm\_home' or 'arm\_away'). 
 
 ## My Setup
 

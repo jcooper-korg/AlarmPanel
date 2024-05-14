@@ -10,7 +10,7 @@
 //
 // if show_countdown_timer is enabled, then the config should specify a list of durations (in seconds) for the arming and pending states
 //
-// if alarm_control_panel.code_arm_required, the keypad will be hidden when disarmed, regardless of the
+// if alarm_control_panel.code_arm_required is set, the keypad will be shown when disarmed, regardless of the
 // hide_keypad and auto_hide options.
 
 class AlarmControlPanelCard extends HTMLElement {
