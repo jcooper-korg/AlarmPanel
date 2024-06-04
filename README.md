@@ -6,7 +6,7 @@ I have included my complete working [manual alarm control panel](https://www.hom
 
 ## News
 
-This card was last tested working with Home Assistant 2024.5.4. HA occasionally makes breaking changes, and I don't constantly update my system so I may not notice if it becomes broken.
+This card was last tested working with Home Assistant 2024.5.5. HA occasionally makes breaking changes, and I don't constantly update my system so I may not notice if it becomes broken.
 
 Previous versions of this card included a custom version of the HA manual_alarm_panel component. This is no longer supported. If you had installed a previous version of this card, you should remove it from `/config/custom_components/manual`. Optional backstory: I had modified that component to publish a state_duration attribute for use with my countdown timer. But the HA team [rejected my pull request](https://github.com/home-assistant/core/pull/41872), so I have since removed it, and now require the durations to be specified in the card config, as detailed below. 
  
