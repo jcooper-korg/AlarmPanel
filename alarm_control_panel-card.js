@@ -6,7 +6,9 @@
 //
 // if confirm_entities is provided, then when disarmed, it will show "Ready" in
 // the status title if all those entities are off, otherwise it'll show "Not Ready".
-// (can customize those strings in the labels config using ready and not_ready)
+// (can customize those strings in the labels config using ready and not_ready).
+// also, if confirm_entities, disable_arm_if_not_ready, and show_override_if_not_ready are all set, then
+// it will show an Override checkbox when not ready.
 //
 // if show_countdown_timer is enabled, then the config should specify a list of durations (in seconds) for the arming and pending states
 //
@@ -94,6 +96,15 @@ class AlarmControlPanelCard extends HTMLElement {
     if (!config.entity || config.entity.split(".")[0] !== "alarm_control_panel") {
       throw new Error('Please specify an entity from alarm_control_panel domain.');
     }
+
+    if (config.show_override_if_not_ready && !config.disable_arm_if_not_ready) {
+        throw new Error('Only specify show_override_if_not_ready if disable_arm_if_not_ready is enabled.');
+    }
+
+    if (config.disable_arm_if_not_ready && !config.confirm_entities) {
+        throw new Error('To use disable_arm_if_not_ready, you must specify a list of confirm_entities.');
+    }
+
     if (config.auto_enter) {
       if (!config.auto_enter.code_length || !config.auto_enter.arm_action) {
         throw new
@@ -101,6 +112,7 @@ class AlarmControlPanelCard extends HTMLElement {
       }
       this._autoarm_action = config.auto_enter.arm_action;
     }
+    
     this._config = Object.assign({}, config);
     if (!this._config.states) this._config.states = ['arm_away', 'arm_home'];
     if (!this._config.scale) this._config.scale = '15px';
@@ -136,34 +148,8 @@ class AlarmControlPanelCard extends HTMLElement {
       }
     }
     
-    const state_str = "state.alarm_control_panel." + this._state;
-    status = this._label(state_str);
-    if (config.confirm_entities && this._state === "disarmed") {
-      if (this._entitiesReady) {
-        status = status + " - " + this._label("ready");
-        if (config.disable_arm_if_not_ready) {
-          root.querySelectorAll(".actions button").forEach(element => {
-            element.removeAttribute("disabled");
-          })
-        }
-      } else {
-        status = status + " - " + this._label("not_ready");
-        if (config.disable_arm_if_not_ready) {
-          root.querySelectorAll(".actions button").forEach(element => {
-            element.setAttribute("disabled", true);
-          })
-        }
-      }
-    }
-    
-    if (config.title) {
-      card.header = config.title;
-      root.getElementById("state-text").innerHTML = status;
-      root.getElementById("state-text").className = `state ${this._state}`;
-    } else {
-      card.header = status;
-    }
-
+    this._updateReady();
+ 
     root.getElementById("state-icon").setAttribute("icon",
     this._icons[this._state] || 'mdi:shield-outline');
     root.getElementById("badge-icon").className = this._state;
@@ -218,6 +204,65 @@ class AlarmControlPanelCard extends HTMLElement {
     }
   }
   
+  _showOverrideCheckbox(visible) {
+    const overrideCheckbox = this.shadowRoot.getElementById("overrideCheckbox");
+    const overrideLabel = this.shadowRoot.getElementById("overrideLabel");
+      if (visible) {
+        overrideCheckbox.style.visibility = "visible";
+        overrideLabel.style.visibility = "visible";
+      } else {
+         overrideCheckbox.checked = false; // always clear override checkbox when hiding it
+         overrideCheckbox.style.visibility = "hidden";
+         overrideLabel.style.visibility = "hidden";
+      }
+   }
+  
+  _updateReady() {
+    const root = this.shadowRoot;
+    const card = root.lastChild;
+    const config = this._config;
+  
+    const state_str = "state.alarm_control_panel." + this._state;
+    status = this._label(state_str);
+   
+    var showOverrideCheckbox = false;
+    if (config.confirm_entities && this._state === "disarmed") {
+      if (this._entitiesReady) {
+         status = status + " - " + this._label("ready");
+         if (config.disable_arm_if_not_ready) {
+           root.querySelectorAll(".actions button").forEach(element => {
+             element.removeAttribute("disabled");
+           })
+         }
+      } else {
+         status = status + " - " + this._label("not_ready");
+         if (config.disable_arm_if_not_ready) {
+            showOverrideCheckbox = config.show_override_if_not_ready // this is the only case that shows the override checkbox
+            const allowOverride = root.getElementById("overrideCheckbox").checked;
+            if (allowOverride) {
+               root.querySelectorAll(".actions button").forEach(element => {
+                  element.removeAttribute("disabled");
+               })
+            } else {
+               root.querySelectorAll(".actions button").forEach(element => {
+                  element.setAttribute("disabled", true);
+               })
+            }
+         }
+      }
+   }
+
+    this._showOverrideCheckbox(showOverrideCheckbox);
+
+    if (config.title) {
+      card.header = config.title;
+      root.getElementById("state-text").innerHTML = status;
+      root.getElementById("state-text").className = `state ${this._state}`;
+    } else {
+      card.header = status;
+    }
+  }
+  
   _actionButtons() {
     let disarmButtonIfHideKeypad = '';
     if (this._config.hide_keypad) {
@@ -227,7 +272,8 @@ class AlarmControlPanelCard extends HTMLElement {
       <div id="arm-actions" class="actions">
         ${this._config.states.map(el => `${this._actionButton(el)}`).join('')}
       </div>
-      ${disarmButtonIfHideKeypad}`
+      ${disarmButtonIfHideKeypad}
+      <div id="override-option" class="override"><input name="Override" id="overrideCheckbox" type="checkbox" /><label id="overrideLabel" for="override">Override</label></div>`
   }
 
   _stateIconLabel(state) {
@@ -337,6 +383,10 @@ class AlarmControlPanelCard extends HTMLElement {
         this._callService(element.id, value);
       })
     })
+    
+    this.shadowRoot.getElementById("overrideCheckbox").addEventListener("change", () => {
+		this._updateReady();
+    });
   }
 
   _callService(service, code) {
@@ -631,6 +681,14 @@ class AlarmControlPanelCard extends HTMLElement {
         flex-wrap: wrap;
         justify-content: center;
         font-size: calc(var(--base-unit) * 1);
+      }
+      .override {
+        margin-top: 12px;
+        text-align: center;
+        font-size: calc(var(--base-unit) * 1.2);
+      }
+      .override label {
+        padding-left: 4px;
       }
       .actions button {
         font-size: calc(var(--base-unit) * 1.5);
