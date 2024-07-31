@@ -624,6 +624,7 @@ class AlarmControlPanelCard extends HTMLElement {
         text-align: center;
         margin: auto;
         max-width: 150px;
+        --mdc-typography-subtitle1-font-size: 24px;
       }
       .state {
         margin-left: 20px;
