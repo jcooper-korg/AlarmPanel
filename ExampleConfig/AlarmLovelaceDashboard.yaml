@@ -30,6 +30,7 @@ views:
           arming: 60
           pending: 30
         disable_arm_if_not_ready: true
+        show_override_if_not_ready: true
         labels:
           ui.card.alarm_control_panel.arm_away: AWAY
           ui.card.alarm_control_panel.arm_home: HOME

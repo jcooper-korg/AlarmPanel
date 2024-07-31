@@ -55,8 +55,7 @@ The card options are:
 * `scale`: (optional string). default is 14px. increase/decrease the size of the buttons/text/etc by changing this number
 * `title`: (optional string) if provided will show this title at the top of the card, and the alarm state will be below it. if not provided, will show the alarm state as the title (which saves some vertical space, if you are space constrained, like on a wall tablet)
 * `states`: (optional list). list of arming states to support. Default is `armed_away` and `armed_home`. If you use more than two, you may need to adjust the `.actions button` widths 
-* `confirm_entities`: (optional list) a list of sensors which will be continuously monitored when disarmed so it can show Ready/Not ready text in the card header
-* `disable_arm_if_not_ready`: (optional boolean) if `confirm_entities` is provided, this will disable the arm buttons and auto_enter action unless all the listed sensors are ready
+* `confirm_entities`: (optional list) a list of sensors which will be continuously monitored when disarmed so it can show Ready/Not ready text in the card header.  If `confirm_entities` is specified, you may optionally also set `disable_arm_if_not_ready` to disable the arm buttons and auto_enter action unless all the listed sensors are ready. And if `disable_arm_if_not_ready` is set, you may also optionally set `show_override_if_not_ready` to show an override checkbox when the entities are not ready, which will re-enable the arming buttons (allowing you, for example, to arm the alarm but leave a window open).
 * `labels`: (optional list) list of text replacements, allowing you to customize the text that is shown for `ui.card.alarm_control_panel.arm_away`, `ui.card.alarm_control_panel.arm_home`, `ui.card.alarm_control_panel.clear_code`, `ready` and `not_ready` 
 * `display_letters`: (optional boolean) shows letters on number pad buttons like a telephone keypad
 * `style`: (optional string) this text will be appended to the card css style, allowing you to override colors, etc. Also see [Thomas Loven's card mod](https://github.com/thomasloven/lovelace-card-mod)
@@ -78,13 +77,14 @@ My config files are in the [ExampleConfig](https://github.com/jcooper-korg/Alarm
 * My Alarm lovelace dashboard has two cards- the new custom alarm panel card, and a [Conditional Card](https://www.home-assistant.io/lovelace/conditional) which shows when any of the door/window sensors is opened, while disarmed.
 * I have configured the custom card with:
 	* label replacements to use shorter all-caps words for the AWAY, HOME, etc.
-	* confirm\_entities list of sensors, so that it shows "Ready" if they're all off, or "Not ready" if any are on
-	* countdown timer enabled and durations in seconds specified for arming (60) and pending (30) to match the arming_time and delay_time in the manual platform's armed_away config
+	* `confirm_entities` list of sensors, so that it shows "Ready" if they're all off, or "Not ready" if any are on
+	* `disable_arm_if_not_ready` and `show_override_if_not_ready` both set, so the arm buttons are disabled unless all the `confirm_entities` are ready, or the override checkbox is checked
+	* countdown timer enabled and durations in seconds specified for arming (60) and pending (30) to match the `arming_time` and `delay_time` in the manual platform's armed_away config
 * I have set up automations to handle:
 	* turning on/off the green/red LEDs, beeper, and siren based on sensor entity states and the manual `alarm_control_panel` armed/disarmed/triggered state
 	* notifying our iphones when armed / disarmed or when triggered
 	* triggering the alarm on smoke sensors, regardless of arming state
-* In order to include the name of the entity that triggered the alarm in the trigger notifications, I'm using an input\_text entity in my config, which is set when the alarm trigger automation runs, and is then referenced by the notification
+* In order to include the name of the entity that triggered the alarm in the trigger notifications, I'm using an `input_text` entity in my config, which is set when the alarm trigger automation runs, and is then referenced by the notification
 * In order to be able to trigger the alarm immediately for some sensors, while other sensors (e.g. entry doors) are delayed, I have a script called `trigger_alarm_immediately` which first disarms the alarm, and then triggers. Requires that the the `delay_time` is set to 0 for the disarmed state in the `alarm_control_panel` configuration.
 * I created a separate user named Alarm Panel that I use to log in from my wall mounted tablet. I'm using [Custom Header](https://maykar.github.io/custom-header) to hide the sidebar and title bar on the wall mounted tablet for that user.
 
