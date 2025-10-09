@@ -6,7 +6,9 @@ I have included my complete working [manual alarm control panel](https://www.hom
 
 ## News
 
-This card was last tested working with Home Assistant 2024.9.0. HA occasionally makes breaking changes, and I don't constantly update my system so I may not notice if it becomes broken.
+This card was last tested working with Home Assistant 2025.10.1. HA occasionally makes breaking changes, and I don't constantly update my system so I may not notice if it becomes broken.
+
+Previous versions of this card were named alarm_control_panel-card.js, but the card was renamed to AlarmPanel.js to match the repo name, for HACS compatibility. If you are updating, revisit the installation instructions below.
 
 Previous versions of this card included a custom version of the HA manual_alarm_panel component. This is no longer supported. If you had installed a previous version of this card, you should remove it from `/config/custom_components/manual`. Optional backstory: I had modified that component to publish a state_duration attribute for use with my countdown timer. But the HA team [rejected my pull request](https://github.com/home-assistant/core/pull/41872), so I have since removed it, and now require the durations to be specified in the card config, as detailed below. 
  
@@ -37,11 +39,11 @@ To use this card in Home Assistant:
 <img src="https://github.com/jcooper-korg/AlarmPanel/blob/master/Screenshots/Installation-Resource.png?raw=true" width="400">
 
 
-* copy the `alarm_control_panel-card.js` into the www folder in your config folder (create the www folder if it's missing, and restart Home Assistant)
-* install it as a custom Lovelace resource in Configuration > Lovelace Dashboards > Resources. 
+* copy the `AlarmPanel.js` into the www folder in your config folder (create the www folder if it's missing, and restart Home Assistant)
+* install it as a custom Lovelace resource in Configuration > Dashboards > Resources. (Resources is under the top right ... menu). 
 	* Turn on Advanced Mode in your user profile if you can't see the Resources tab. 
-	* The Url of the file will be `/local/alarm_control_panel-card.js`, and the type is "JavaScript Module".  
-	* If you are making local modifications to the file, you can add a version number to the end of the Url, like `/local/alarm_control_panel-card.js?v=3` and increment the number each time you make a change, to force it to use the new version instead of your browser cached version.
+	* The Url of the file will be `/local/AlarmPanel.js`, and the type is "JavaScript Module".  
+	* If you are making local modifications to the file, you can add a version number to the end of the Url, like `/local/AlarmPanel.js?v=3` and increment the number each time you make a change, to force it to use the new version instead of your browser cached version.
 * add the alarm panel to your lovelace view using a Manual card, with type set as `type: 'custom:alarm_control_panel-card'` and specify your alarm\_control\_panel entity as named in your configuration.yaml (e.g. `entity: alarm_control_panel.house`). See my [example AlarmLovelaceDashboard yaml configs](https://github.com/jcooper-korg/AlarmPanel/blob/master/ExampleConfig).
 
 ## Card configuration options
