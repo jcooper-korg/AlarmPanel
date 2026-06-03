@@ -2,5 +2,5 @@
     "name": "AlarmPanel",
     "content_in_root": true,
     "filename": "AlarmPanel.js",
-    "homeassistant": "2024.09.0"
+    "homeassistant": "2026.4.0"
 }

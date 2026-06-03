@@ -4,9 +4,12 @@ This custom alarm panel card was forked in September 2020 from [Kevin Cooper's r
 
 I have included my complete working [manual alarm control panel](https://www.home-assistant.io/integrations/manual/) configuration, automations, script, lovelace dashboard, etc in the [ExampleConfig](https://github.com/jcooper-korg/AlarmPanel/tree/master/ExampleConfig) folder.
 
+## Minimum Home Assistant Core Version
+Due to [breaking frontend changes in Home Assistant 2026.4](https://developers.home-assistant.io/blog/2026/03/25/frontend-component-updates-2026.4/), version 1.0.0+ of this card now *requires* minimum HA 2026.4+.  If you're still running an older version of HA, you'll need to use [version 0.9.0](https://github.com/jcooper-korg/AlarmPanel/releases/tag/0.9.0).
+
 ## News
 
-This card was last tested working with Home Assistant 2025.10.1. HA occasionally makes breaking changes, and I don't constantly update my system so I may not notice if it becomes broken.
+This card was last tested working with Home Assistant 2026.6.0. HA occasionally makes breaking changes, and I don't constantly update my system so I may not notice if it becomes broken.
 
 Previous versions of this card were named alarm_control_panel-card.js, but the card was renamed to AlarmPanel.js to match the repo name, for HACS compatibility. If you are updating, revisit the installation instructions below.
 
@@ -17,7 +20,7 @@ Previous versions of this card included a custom version of the HA manual_alarm_
 
 * improve the appearance of the arm/disarm and keypad buttons (which are too small on current Home Assistant versions)
 * high visibility and ergonomically sized buttons on web, iOS companion app, and wall mounted tablet
-* hide the key pad when disarmed (if `alarm_control_panel.code_arm_required` is off)
+* hide the key pad when disarmed (if `code_arm_required` is false in your `manual` alarm panel config in `configuration.yaml`)
 * add a config option to show Ready / Not Ready when disarmed, monitoring a given list of entities
 * add a config option to show a countdown timer when arming or pending
 
@@ -53,7 +56,7 @@ See the [ExampleConfig](https://github.com/jcooper-korg/AlarmPanel/tree/master/E
 The card options are:
 
 * `entity`: (required string) the name of the manual `alarm_control_panel` entity
-* `show_countdown_timer`: (optional boolean). default false. set to true to show countdown timer, or false to hide it.  If enabled, you must also configure the `durations` list, specifying a duration in seconds for the arming, and pending states. These times should match the times you specified in your manual config.
+* `show_countdown_timer`: (optional boolean). default false. set to true to show countdown timer, or false to hide it.  If enabled, you must also configure the `durations` list, specifying a duration in seconds for the arming, and pending states. These times should match the `arming_time` and `delay_time` in your `manual` alarm panel config (`configuration.yaml`).
 * `scale`: (optional string). default is 14px. increase/decrease the size of the buttons/text/etc by changing this number
 * `title`: (optional string) if provided will show this title at the top of the card, and the alarm state will be below it. if not provided, will show the alarm state as the title (which saves some vertical space, if you are space constrained, like on a wall tablet)
 * `states`: (optional list). list of arming states to support. Default is `armed_away` and `armed_home`. If you use more than two, you may need to adjust the `.actions button` widths 
@@ -62,7 +65,7 @@ The card options are:
 * `display_letters`: (optional boolean) shows letters on number pad buttons like a telephone keypad
 * `style`: (optional string) this text will be appended to the card css style, allowing you to override colors, etc. Also see [Thomas Loven's card mod](https://github.com/thomasloven/lovelace-card-mod)
 * `auto_hide`: (optional boolean) hides the keypad and action buttons. click on the badge to show/hide them.  
-* `auto_enter`: (optional object). you must also specify `code_length` and `arm_action`. This will automatically disarm or arm with the specified arm\_action when entering the code. When a code of the correct length is entered and the alarm is currently armed, the alarm will be disarmed. If `alarm_control_panel.code_arm_required` is on and the alarm is currently disarmed, and a code of the correct length is entered, the arm_action will be triggered (e.g. 'arm\_home' or 'arm\_away'). 
+* `auto_enter`: (optional object). you must also specify `code_length` and `arm_action`. This will automatically disarm or arm with the specified arm\_action when entering the code. When a code of the correct length is entered and the alarm is currently armed, the alarm will be disarmed. If you've set `code_arm_required: true` in your manual alarm panel configuration (in HA configuration.yaml), then while the alarm is disarmed, entering a code of the correct length triggers the configured arm_action (e.g. arm_home or arm_away).
 
 ## My Setup
 
@@ -81,13 +84,13 @@ My config files are in the [ExampleConfig](https://github.com/jcooper-korg/Alarm
 	* label replacements to use shorter all-caps words for the AWAY, HOME, etc.
 	* `confirm_entities` list of sensors, so that it shows "Ready" if they're all off, or "Not ready" if any are on
 	* `disable_arm_if_not_ready` and `show_override_if_not_ready` both set, so the arm buttons are disabled unless all the `confirm_entities` are ready, or the override checkbox is checked
-	* countdown timer enabled and durations in seconds specified for arming (60) and pending (30) to match the `arming_time` and `delay_time` in the manual platform's armed_away config
+	* countdown timer enabled and durations in seconds specified for arming (60) and pending (30) to match the `arming_time` and `delay_time` in the `armed_away` section of my `manual` alarm panel config (`configuration.yaml`)
 * I have set up automations to handle:
 	* turning on/off the green/red LEDs, beeper, and siren based on sensor entity states and the manual `alarm_control_panel` armed/disarmed/triggered state
 	* notifying our iphones when armed / disarmed or when triggered
 	* triggering the alarm on smoke sensors, regardless of arming state
-* In order to include the name of the entity that triggered the alarm in the trigger notifications, I'm using an `input_text` entity in my config, which is set when the alarm trigger automation runs, and is then referenced by the notification
-* In order to be able to trigger the alarm immediately for some sensors, while other sensors (e.g. entry doors) are delayed, I have a script called `trigger_alarm_immediately` which first disarms the alarm, and then triggers. Requires that the the `delay_time` is set to 0 for the disarmed state in the `alarm_control_panel` configuration.
+* In order to include the name of the entity that triggered the alarm in the trigger notifications, I'm using an `input_text` entity defined in my Home Assistant config (`configuration.yaml`), which is set when the alarm trigger automation runs, and is then referenced by the notification
+* In order to be able to trigger the alarm immediately for some sensors, while other sensors (e.g. entry doors) are delayed, I have a script called `trigger_alarm_immediately` which first disarms the alarm, and then triggers. Requires that `delay_time` is set to 0 for the disarmed state in my `manual` alarm panel config (`configuration.yaml`).
 * I created a separate user named Alarm Panel that I use to log in from my wall mounted tablet. I'm using [Custom Header](https://maykar.github.io/custom-header) to hide the sidebar and title bar on the wall mounted tablet for that user.
 
 ## Credits
