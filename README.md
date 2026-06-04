@@ -5,7 +5,7 @@ This custom alarm panel card was forked in September 2020 from [Kevin Cooper's r
 I have included my complete working [manual alarm control panel](https://www.home-assistant.io/integrations/manual/) configuration, automations, script, lovelace dashboard, etc in the [ExampleConfig](https://github.com/jcooper-korg/AlarmPanel/tree/master/ExampleConfig) folder.
 
 ## Minimum Home Assistant Core Version
-Due to [breaking frontend changes in Home Assistant 2026.4](https://developers.home-assistant.io/blog/2026/03/25/frontend-component-updates-2026.4/), version 1.0.0+ of this card now *requires* minimum HA 2026.4+.  If you're still running an older version of HA, you'll need to use [version 0.9.0](https://github.com/jcooper-korg/AlarmPanel/releases/tag/0.9.0).
+Due to [breaking frontend changes in Home Assistant 2026.4](https://developers.home-assistant.io/blog/2026/03/25/frontend-component-updates-2026.4/), version 1.0.0+ of this card now *requires* minimum HA 2026.4.  If you're still running an older version of HA, you'll need to use [version 0.9.0](https://github.com/jcooper-korg/AlarmPanel/releases/tag/0.9.0) of this card.
 
 ## News
 
