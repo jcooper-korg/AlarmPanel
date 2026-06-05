@@ -15,7 +15,7 @@ alarm_control_panel:
     code_arm_required: false
     trigger_time: 120
     disarmed:
-      delay_time: 0  # immediately trigger siren by switching first to disarmed, then to trigger and since disarmed delay_time is 0, it'll immediately trigger
+      delay_time: 0  # so triggers fired while disarmed (e.g. smoke/CO while home) fire immediately, with no pending delay (default would be 60s)
     armed_away:
       arming_time: 60
       delay_time: 30  # when triggered in away state (used for entry doors), 30 seconds pending before trigger

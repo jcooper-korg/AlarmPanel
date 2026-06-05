@@ -1,147 +1,162 @@
 - id: '1598210904880'
   alias: Turn on Beeper
   description: When entering pending or warning state, sound the beeper
-  trigger:
+  triggers:
   - entity_id: alarm_control_panel.house
     from: disarmed
-    platform: state
     to: arming
+    trigger: state
   - entity_id: alarm_control_panel.house
-    platform: state
     to: pending
-  condition: []
-  action:
-  - device_id: 50e2350f1b4f40cc835509d0f34d9bcc
-    domain: switch
-    entity_id: switch.beep
-    type: turn_on
+    trigger: state
+  conditions: []
+  actions:
+  - action: light.turn_on
+    target:
+      entity_id: light.alarm_panel_warning_beep
+    data:
+      effect: Strobe
   mode: single
 - id: '1598211133176'
   alias: Alarm Triggered
   description: ''
-  trigger:
+  triggers:
   - entity_id: alarm_control_panel.house
-    platform: state
     to: triggered
-  condition: []
-  action:
-  - device_id: cd4e154d91e749b084a3196d9371826c
-    domain: switch
-    entity_id: switch.siren
-    type: turn_on
+    trigger: state
+  conditions: []
+  actions:
+  - action: switch.turn_on
+    target:
+      entity_id: switch.siren
+    data: {}
   - data:
       data:
         subtitle: The Alarm is Sounding
       message: 'Home Alarm triggered by: {{ states(''input_text.trigger_source'')
         }}'
       title: Smart Home Alert
-    service: notify.alarm_notification_group
+    action: notify.alarm_notification_group
   mode: single
 - id: '1598211302522'
-  alias: Alarm Disarmed
-  description: ''
-  trigger:
+  alias: Alarm Disarmed or Trigger Expired
+  description: Turn off siren/beep/LED when alarm exits triggered or becomes disarmed.
+    Also fires on the from-triggered transition so the siren turns off when
+    trigger_time expires (not only on an explicit disarm).
+  triggers:
   - entity_id: alarm_control_panel.house
-    platform: state
     to: disarmed
-  condition: []
-  action:
-  - device_id: cd4e154d91e749b084a3196d9371826c
-    domain: switch
-    entity_id: switch.siren
-    type: turn_off
-  - device_id: 50e2350f1b4f40cc835509d0f34d9bcc
-    domain: switch
-    entity_id: switch.beep
-    type: turn_off
-  - device_id: 50e2350f1b4f40cc835509d0f34d9bcc
-    domain: switch
-    entity_id: switch.red_led
-    type: turn_off
-  - service: notify.alarm_notification_group
-    data:
-      title: Smart Home Alert
-      message: Alarm Disarmed
+    trigger: state
+  - entity_id: alarm_control_panel.house
+    from: triggered
+    trigger: state
+  conditions: []
+  actions:
+  - action: switch.turn_off
+    target:
+      entity_id: switch.siren
+    data: {}
+  - action: light.turn_off
+    target:
+      entity_id: light.alarm_panel_warning_beep
+    data: {}
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.to_state.state == ''disarmed'' }}'
+      sequence:
+      - action: switch.turn_off
+        target:
+          entity_id: switch.red_led
+        data: {}
+      - data:
+          title: Smart Home Alert
+          message: Alarm Disarmed
+        action: notify.alarm_notification_group
+    default:
+    - data:
+        title: Smart Home Alert
+        message: Alarm trigger expired, returned to {{ trigger.to_state.state }}
+      action: notify.alarm_notification_group
   mode: single
 - id: '1598213488706'
   alias: All zones clear while disarmed
   description: Turn on the green LED when all zones are clear while disarmed
-  trigger:
+  triggers:
   - entity_id: group.alarm_zones_for_led
-    platform: state
+    from: 'on'
     to: 'off'
+    trigger: state
   - entity_id: alarm_control_panel.house
-    platform: state
     to: disarmed
-  condition:
+    trigger: state
+  conditions:
   - condition: state
     entity_id: alarm_control_panel.house
     state: disarmed
   - condition: state
-    entity_id: group.alarm_zones
+    entity_id: group.alarm_zones_for_led
     state: 'off'
-  action:
-  - device_id: 50e2350f1b4f40cc835509d0f34d9bcc
-    domain: switch
-    entity_id: switch.green_led
-    type: turn_on
+  actions:
+  - action: switch.turn_on
+    target:
+      entity_id: switch.green_led
+    data: {}
   mode: single
 - id: '1598213553348'
   alias: Alarm zone opened while disarmed
   description: Turn off the green LED when any alarm zone is open while disarmed
-  trigger:
+  triggers:
   - entity_id: group.alarm_zones_for_led
-    platform: state
+    from: 'off'
     to: 'on'
-  - entity_id: alarm_control_panel.house
-    platform: state
-    to: disarmed
-  condition:
+    trigger: state
+  conditions:
   - condition: state
     entity_id: alarm_control_panel.house
     state: disarmed
   - condition: state
-    entity_id: group.alarm_zones
+    entity_id: group.alarm_zones_for_led
     state: 'on'
-  action:
-  - device_id: 50e2350f1b4f40cc835509d0f34d9bcc
-    domain: switch
-    entity_id: switch.green_led
-    type: turn_off
+  actions:
+  - action: switch.turn_off
+    target:
+      entity_id: switch.green_led
+    data: {}
   mode: single
 - id: '1598213810560'
   alias: Alarm Armed
   description: ''
-  trigger:
+  triggers:
   - entity_id: alarm_control_panel.house
-    platform: state
     to: armed_home
+    trigger: state
   - entity_id: alarm_control_panel.house
-    platform: state
     to: armed_away
-  condition: []
-  action:
-  - device_id: 50e2350f1b4f40cc835509d0f34d9bcc
-    domain: switch
-    entity_id: switch.beep
-    type: turn_off
-  - device_id: 50e2350f1b4f40cc835509d0f34d9bcc
-    domain: switch
-    entity_id: switch.green_led
-    type: turn_off
-  - device_id: 50e2350f1b4f40cc835509d0f34d9bcc
-    domain: switch
-    entity_id: switch.red_led
-    type: turn_on
-  - service: notify.alarm_notification_group
-    data:
+    trigger: state
+  conditions: []
+  actions:
+  - action: switch.turn_off
+    target:
+      entity_id: switch.green_led
+    data: {}
+  - action: switch.turn_on
+    target:
+      entity_id: switch.red_led
+    data: {}
+  - action: light.turn_off
+    target:
+      entity_id: light.alarm_panel_warning_beep
+    data: {}
+  - data:
       title: Smart Home Alert
       message: Alarm Armed
+    action: notify.alarm_notification_group
   mode: single
 - id: '1600468597816'
   alias: Trigger Immediately when Arming
-  description: disarm first, then trigger, causes immediate siren due to disarmed
-    delay_time=0
+  description: While still arming, instant sensors fire immediately (no entry delay)
+    via the trigger_alarm_immediately script.
   trigger:
   - entity_id: binary_sensor.office_window
     from: 'off'
@@ -197,7 +212,8 @@
   mode: single
 - id: '1600468682227'
   alias: Trigger Immediately when Armed Home
-  description: ''
+  description: While armed_home, any door/window triggers immediately (armed_home
+    has delay_time 0, so alarm_trigger fires with no pending).
   trigger:
   - entity_id: binary_sensor.office_window
     from: 'off'
@@ -266,8 +282,8 @@
   mode: single
 - id: '1600468738107'
   alias: Trigger Immediately when Armed Away
-  description: disarm first, then trigger, causes immediate siren due to disarmed
-    delay_time=0
+  description: Interior sensors (motion, glass break) and windows fire immediately
+    (no entry delay) via the trigger_alarm_immediately script.
   trigger:
   - entity_id: binary_sensor.office_window
     from: 'off'
@@ -343,8 +359,9 @@
   mode: single
 - id: '1600468865168'
   alias: Trigger Immediately on Smoke
-  description: disarm first, then trigger, causes immediate siren due to disarmed
-    delay_time=0
+  description: Smoke/CO triggers immediately in ANY state (no condition) via the
+    trigger_alarm_immediately script. If disarmed, the script triggers directly so
+    the system returns to disarmed after trigger_time.
   trigger:
   - entity_id: binary_sensor.hall_smoke
     from: 'off'
@@ -365,7 +382,9 @@
   mode: single
 - id: '1600472249835'
   alias: Trigger Pending When Armed Away
-  description: ''
+  description: Entry doors while armed_away call alarm_trigger directly, so the panel
+    uses armed_away's delay_time (30s pending) -- this is the entry delay, and it is
+    what the card's countdown timer watches.
   trigger:
   - entity_id: binary_sensor.front_door
     from: 'off'

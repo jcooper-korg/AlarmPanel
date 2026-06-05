@@ -1,14 +1,41 @@
-# First disarms the alarm, and then triggers it.
-# Since the delay_time in the disarmed state is set to 0
-# (in the alarm_control_panel section in configuration.yaml),
-# this will cause the alarm to immediately trigger.
+# Triggers the alarm IMMEDIATELY (no entry delay) for sensors that should not get the
+# entry-door grace period: interior motion/glass-break while armed_away, any sensor
+# during the exit-arming window, and smoke/CO in any state.
+#
+# How: if the panel is already armed, first switch to armed_home, then trigger.
+# armed_home has BOTH arming_time: 0 (instant switch) AND delay_time: 0 (instant
+# trigger) in the manual alarm_control_panel config (configuration.yaml).
+#
+# Why bounce through armed_home: when trigger_time expires (~2 min), the manual
+# component returns to the state it was in just before triggering. Triggering straight
+# from armed_away is blocked by its 30s delay_time, so we need a zero-delay springboard.
+# My old approach bounced through DISARMED -> after a false alarm the system was left
+# UNARMED (a real gap). Bouncing through armed_home means it falls back to armed_home
+# (still armed). Trade-off: an armed_away trip downgrades to armed_home after a timeout
+# -- imperfect, but far better than leaving an interior sensor on a 30s entry delay.
+#
+# Disarmed case (e.g. smoke while home & disarmed): we do NOT switch to armed_home --
+# disarmed already has delay_time: 0, so we trigger directly and it correctly falls
+# back to disarmed after trigger_time.
+
 trigger_alarm_immediately:
   alias: Trigger Alarm Immediately
   mode: single
   sequence:
-    - service: alarm_control_panel.alarm_disarm
-      data:
+    # If already armed, bounce through armed_home first (instant) so the post-
+    # trigger_time fallback is armed_home instead of disarmed. If currently
+    # disarmed (e.g. smoke while home), skip this and just trigger -> stays disarmed.
+    - choose:
+        - conditions:
+            - condition: not
+              conditions:
+                - condition: state
+                  entity_id: alarm_control_panel.house
+                  state: disarmed
+          sequence:
+            - action: alarm_control_panel.alarm_arm_home
+              target:
+                entity_id: alarm_control_panel.house
+    - action: alarm_control_panel.alarm_trigger
+      target:
         entity_id: alarm_control_panel.house
-        code: !secret house_alarm_code
-    - service: alarm_control_panel.alarm_trigger
-      entity_id: alarm_control_panel.house
