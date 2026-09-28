@@ -44,7 +44,7 @@ class AlarmControlPanelCard extends HTMLElement {
       this.myhass = hass;
       this.code_arm_required = entity.attributes.code_arm_required;
       this.has_numeric_code = !entity.attributes.code_format || entity.attributes.code_format == "number";
-      if(!this.shadowRoot.lastChild) {
+      if(!this._card) {
         this._createCard(entity);
       }
       
@@ -82,6 +82,9 @@ class AlarmControlPanelCard extends HTMLElement {
     card.appendChild(this._style(config.style, entity));
     card.appendChild(content);
     this.shadowRoot.appendChild(card);
+    // keep our own reference: other frontend mods (e.g. card-mod) may append nodes
+    // to our shadowRoot, so shadowRoot.lastChild is not reliably our ha-card
+    this._card = card;
     this._showCountdownTimer(false); // start hidden
 
     this._setupInput();
@@ -117,13 +120,15 @@ class AlarmControlPanelCard extends HTMLElement {
     if (!this._config.states) this._config.states = ['arm_away', 'arm_home'];
     if (!this._config.scale) this._config.scale = '15px';
 
-    const root = this.shadowRoot;
-    if (root.lastChild) root.removeChild(root.lastChild);
+    if (this._card) {
+      this._card.remove();
+      this._card = null;
+    }
   }
 
   _updateCardContent(entity) {
     const root = this.shadowRoot;
-    const card = root.lastChild;
+    const card = this._card;
     const config = this._config;
  
     if (config.show_countdown_timer && this._previousAlarmState != this._state) {
@@ -219,11 +224,11 @@ class AlarmControlPanelCard extends HTMLElement {
   
   _updateReady() {
     const root = this.shadowRoot;
-    const card = root.lastChild;
+    const card = this._card;
     const config = this._config;
   
     const state_str = "state.alarm_control_panel." + this._state;
-    status = this._label(state_str);
+    let status = this._label(state_str);
    
     var showOverrideCheckbox = false;
     if (config.confirm_entities && this._state === "disarmed") {
@@ -361,7 +366,7 @@ class AlarmControlPanelCard extends HTMLElement {
 
   _setupActions() {
     const root = this.shadowRoot;
-    const card = this.shadowRoot.lastChild;
+    const card = this._card;
     const config = this._config;
 
     if (config.auto_hide) {
@@ -390,7 +395,7 @@ class AlarmControlPanelCard extends HTMLElement {
   }
 
   _callService(service, code) {
-    const input = this.shadowRoot.lastChild.querySelector("ha-input");
+    const input = this._card.querySelector("ha-input");
     this.myhass.callService('alarm_control_panel', `alarm_${service}`, {
       entity_id: this._config.entity,
       code: code,
@@ -409,7 +414,7 @@ class AlarmControlPanelCard extends HTMLElement {
 
   _setupInput() {
     if (this._config.auto_enter) {
-      const input = this.shadowRoot.lastChild.querySelector("ha-input");
+      const input = this._card.querySelector("ha-input");
       input.addEventListener('input', event => { this._autoEnter() })
     }
   }
@@ -417,7 +422,7 @@ class AlarmControlPanelCard extends HTMLElement {
   _setupKeypad() {
     const root = this.shadowRoot;
 
-    const input = root.lastChild.querySelector('ha-input');
+    const input = this._card.querySelector('ha-input');
     root.querySelectorAll(".pad button").forEach(element => {
       if (element.getAttribute('value') ===
         this._label("ui.card.alarm_control_panel.clear_code")) {
@@ -441,7 +446,7 @@ class AlarmControlPanelCard extends HTMLElement {
     const config = this._config;
 
     if (config.auto_enter) {
-      const card = this.shadowRoot.lastChild;
+      const card = this._card;
       const code = card.querySelector("ha-input").value;
       if (code.length == config.auto_enter.code_length && this._autoarm_action != "disabled") {
         this._callService(this._autoarm_action, code);
