@@ -35,6 +35,7 @@ class AlarmControlPanelCard extends HTMLElement {
     this._timerStrokeWidth = this._timerRadius / 5;
     this._timerSize = 2 * (this._timerRadius + this._timerStrokeWidth);
     this._currentStateDuration = 0;
+    this._countdownStartTime = 0;
   }
 
   set hass(hass) {
@@ -139,6 +140,11 @@ class AlarmControlPanelCard extends HTMLElement {
           if (this._config.durations && this._config.durations[this._state] && this._config.durations[this._state] != 0)
           {
             this._currentStateDuration = this._config.durations[this._state];
+            // time the countdown on the browser's own clock. comparing Date.now() against the
+            // server's last_changed breaks if the device clock is skewed (issue #7). only fall back
+            // to last_changed when the card first loads mid-countdown (no previous state seen).
+            this._countdownStartTime = (this._previousAlarmState === undefined) ?
+              new Date(entity.last_changed).getTime() : Date.now();
             this._showCountdownTimer(true);
             this._doCountdownTimer();	// draw once right away
             this._countdownTimerFunction = setInterval( () => this._doCountdownTimer(), 1000);
@@ -322,12 +328,11 @@ class AlarmControlPanelCard extends HTMLElement {
   }
 
   _doCountdownTimer() {
-    const nowTime = new Date().getTime();
-    const timeMadeActive = new Date(this.myhass.states[this._config.entity].last_changed).getTime();
-    const elapsedSeconds = (nowTime - timeMadeActive) / 1000;
+    const elapsedSeconds = (Date.now() - this._countdownStartTime) / 1000;
     const durationSeconds = this._currentStateDuration;
-    const timeRemaining = Math.round(Math.max(durationSeconds - elapsedSeconds, 0));
-    const elapsedPercent = elapsedSeconds / durationSeconds;
+    // clamp, so the ring can't wrap around and the text stays within 0..duration
+    const elapsedPercent = Math.min(Math.max(elapsedSeconds / durationSeconds, 0), 1);
+    const timeRemaining = Math.round(durationSeconds * (1 - elapsedPercent));
 
     var canvas = this.shadowRoot.getElementById("timerCanvas");
     var ctx = canvas.getContext("2d");
