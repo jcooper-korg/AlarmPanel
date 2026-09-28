@@ -9,7 +9,7 @@ Due to [breaking frontend changes in Home Assistant 2026.4](https://developers.h
 
 ## News
 
-This card was last tested working with Home Assistant 2026.6.0. HA occasionally makes breaking changes, and I don't constantly update my system so I may not notice if it becomes broken.
+This card was last tested working with Home Assistant 2026.9.4. HA occasionally makes breaking changes, and I don't constantly update my system so I may not notice if it becomes broken.
 
 Previous versions of this card were named alarm_control_panel-card.js, but the card was renamed to AlarmPanel.js to match the repo name, for HACS compatibility. If you are updating, revisit the installation instructions below.
 
@@ -37,16 +37,30 @@ I moved the Disarm button from the top button row to the keypad, to the right of
 
 ## Installation
 
-To use this card in Home Assistant:
+### Install via HACS (recommended)
+
+This card isn't in the HACS default store, so add it as a custom repository:
+
+* in HACS, open the top right ... menu > Custom repositories
+* enter `https://github.com/jcooper-korg/AlarmPanel`, set the type to "Dashboard", and click Add
+* search HACS for AlarmPanel, open it, and click Download. HACS adds the dashboard resource for you.
+	* If you're running Home Assistant older than 2026.4, choose version 0.9.0 when downloading (see the note above).
+* reload your browser
+* HACS will then notify you of future updates
+
+### Manual install
 
 <img src="https://github.com/jcooper-korg/AlarmPanel/blob/master/Screenshots/Installation-Resource.png?raw=true" width="400">
 
-
 * copy the `AlarmPanel.js` into the www folder in your config folder (create the www folder if it's missing, and restart Home Assistant)
-* install it as a custom Lovelace resource in Configuration > Dashboards > Resources. (Resources is under the top right ... menu). 
+* install it as a custom Lovelace resource in Settings > Dashboards > Resources. (Resources is under the top right ... menu). 
 	* Turn on Advanced Mode in your user profile if you can't see the Resources tab. 
 	* The Url of the file will be `/local/AlarmPanel.js`, and the type is "JavaScript Module".  
 	* If you are making local modifications to the file, you can add a version number to the end of the Url, like `/local/AlarmPanel.js?v=3` and increment the number each time you make a change, to force it to use the new version instead of your browser cached version.
+* if you get the error "Custom element doesn't exist: alarm_control_panel-card", the file didn't load. Try opening your Home Assistant address (the same one you use for the dashboard) followed by `/local/AlarmPanel.js` in your browser, e.g. `http://homeassistant.local:8123/local/AlarmPanel.js`: if it's not found, check the file's location and name (it's case-sensitive), and that you restarted Home Assistant after creating the www folder. If the file does load, check the resource Url and type, and clear your browser cache.
+
+### Add the card to a dashboard
+
 * add the alarm panel to your lovelace view using a Manual card, with type set as `type: 'custom:alarm_control_panel-card'` and specify your alarm\_control\_panel entity as named in your configuration.yaml (e.g. `entity: alarm_control_panel.house`). See my [example AlarmLovelaceDashboard yaml configs](https://github.com/jcooper-korg/AlarmPanel/blob/master/ExampleConfig).
 
 ## Card configuration options
@@ -60,7 +74,7 @@ The card options are:
 * `scale`: (optional string). default is 14px. increase/decrease the size of the buttons/text/etc by changing this number
 * `title`: (optional string) if provided will show this title at the top of the card, and the alarm state will be below it. if not provided, will show the alarm state as the title (which saves some vertical space, if you are space constrained, like on a wall tablet)
 * `states`: (optional list). list of arming states to support. Default is `armed_away` and `armed_home`. If you use more than two, you may need to adjust the `.actions button` widths 
-* `confirm_entities`: (optional list) a list of sensors which will be continuously monitored when disarmed so it can show Ready/Not ready text in the card header.  If `confirm_entities` is specified, you may optionally also set `disable_arm_if_not_ready` to disable the arm buttons and auto_enter action unless all the listed sensors are ready. And if `disable_arm_if_not_ready` is set, you may also optionally set `show_override_if_not_ready` to show an override checkbox when the entities are not ready, which will re-enable the arming buttons (allowing you, for example, to arm the alarm but leave a window open).
+* `confirm_entities`: (optional list) a list of sensors which will be continuously monitored when disarmed so it can show Ready/Not ready text in the card header. An entity counts as ready only when its state is `off`, so these should be `binary_sensor` entities like door and window contacts. To use other kinds of entities (e.g. a `lock` or `cover`), wrap them in a [template binary sensor](https://www.home-assistant.io/integrations/template/) that is `off` when secure (e.g. `state: "{{ is_state('lock.front_door', 'unlocked') }}"`). An entity that doesn't exist (e.g. a typo) counts as not ready.  If `confirm_entities` is specified, you may optionally also set `disable_arm_if_not_ready` to disable the arm buttons and auto_enter action unless all the listed sensors are ready. And if `disable_arm_if_not_ready` is set, you may also optionally set `show_override_if_not_ready` to show an override checkbox when the entities are not ready, which will re-enable the arming buttons (allowing you, for example, to arm the alarm but leave a window open).
 * `labels`: (optional list) list of text replacements, allowing you to customize the text that is shown for `ui.card.alarm_control_panel.arm_away`, `ui.card.alarm_control_panel.arm_home`, `ui.card.alarm_control_panel.clear_code`, `ready` and `not_ready` 
 * `display_letters`: (optional boolean) shows letters on number pad buttons like a telephone keypad
 * `style`: (optional string) this text will be appended to the card css style, allowing you to override colors, etc. Also see [Thomas Loven's card mod](https://github.com/thomasloven/lovelace-card-mod)
