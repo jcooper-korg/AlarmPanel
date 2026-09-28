@@ -488,7 +488,9 @@ class AlarmControlPanelCard extends HTMLElement {
   _confirmEntitiesReady() {
     if (!this._config.confirm_entities) return true;
     for (var i = 0; i < this._config.confirm_entities.length; i++) {
-       if (this.myhass.states[this._config.confirm_entities[i]].state != "off")
+       // a missing entity (typo, removed device) counts as not ready, rather than throwing and
+       // stopping all card updates
+       if (this.myhass.states[this._config.confirm_entities[i]]?.state != "off")
          return false;
     }
     return true;
