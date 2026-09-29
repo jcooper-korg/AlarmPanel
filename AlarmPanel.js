@@ -133,28 +133,23 @@ class AlarmControlPanelCard extends HTMLElement {
     const config = this._config;
  
     if (config.show_countdown_timer && this._previousAlarmState != this._state) {
+      // restart on every state change, since arming can go straight to pending (e.g. a trigger during the exit delay)
+      this._stopCountdownTimer();
+      this._showCountdownTimer(false);
       // if changing state to arming or pending, and a duration is specified in the config, then start a countdown timer
       if (this._state == "arming" || this._state == "pending")
       {
-        if (this._countdownTimerFunction == null) {
-          const duration = this._countdownDuration(entity);
-          if (duration)
-          {
-            this._currentStateDuration = duration;
-            // use the browser's own clock, not last_changed, which breaks with device clock skew (issue #7)
-            this._countdownStartTime = (this._previousAlarmState === undefined) ?
-              new Date(entity.last_changed).getTime() : Date.now();
-            this._showCountdownTimer(true);
-            this._doCountdownTimer();	// draw once right away
-            this._countdownTimerFunction = setInterval( () => this._doCountdownTimer(), 1000);
-          }
+        const duration = this._countdownDuration(entity);
+        if (duration)
+        {
+          this._currentStateDuration = duration;
+          // use the browser's own clock, not last_changed, which breaks with device clock skew (issue #7)
+          this._countdownStartTime = (this._previousAlarmState === undefined) ?
+            new Date(entity.last_changed).getTime() : Date.now();
+          this._showCountdownTimer(true);
+          this._doCountdownTimer();	// draw once right away
+          this._countdownTimerFunction = setInterval( () => this._doCountdownTimer(), 1000);
         }
-      }
-      else if (this._countdownTimerFunction) {
-        // stop callback, hide timer
-        this._showCountdownTimer(false);
-        clearInterval(this._countdownTimerFunction);
-        this._countdownTimerFunction = null;
       }
     }
     
@@ -414,6 +409,11 @@ class AlarmControlPanelCard extends HTMLElement {
       code: code,
     });
     if (input) input.value = '';
+  }
+
+  _stopCountdownTimer() {
+    clearInterval(this._countdownTimerFunction);
+    this._countdownTimerFunction = null;
   }
 
   _showCountdownTimer(show)
