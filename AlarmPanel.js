@@ -10,7 +10,8 @@
 // also, if confirm_entities, disable_arm_if_not_ready, and show_override_if_not_ready are all set, then
 // it will show an Override checkbox when not ready.
 //
-// if show_countdown_timer is enabled, then the config should specify a list of durations (in seconds) for the arming and pending states
+// if show_countdown_timer is enabled, then the config should specify a list of durations (in seconds) for the arming and pending states,
+// optionally with per-armed-state overrides (e.g. durations.armed_home.arming) to match the manual alarm's per-state config
 //
 // if alarm_control_panel.code_arm_required is set, the keypad will be shown when disarmed, regardless of the
 // hide_keypad and auto_hide options.
@@ -83,8 +84,7 @@ class AlarmControlPanelCard extends HTMLElement {
     card.appendChild(this._style(config.style, entity));
     card.appendChild(content);
     this.shadowRoot.appendChild(card);
-    // keep our own reference: other frontend mods (e.g. card-mod) may append nodes
-    // to our shadowRoot, so shadowRoot.lastChild is not reliably our ha-card
+    // not shadowRoot.lastChild, since other mods (e.g. browser_mod) may append to our shadowRoot (issue #22)
     this._card = card;
     this._showCountdownTimer(false); // start hidden
 
@@ -137,12 +137,11 @@ class AlarmControlPanelCard extends HTMLElement {
       if (this._state == "arming" || this._state == "pending")
       {
         if (this._countdownTimerFunction == null) {
-          if (this._config.durations && this._config.durations[this._state] && this._config.durations[this._state] != 0)
+          const duration = this._countdownDuration(entity);
+          if (duration)
           {
-            this._currentStateDuration = this._config.durations[this._state];
-            // time the countdown on the browser's own clock. comparing Date.now() against the
-            // server's last_changed breaks if the device clock is skewed (issue #7). only fall back
-            // to last_changed when the card first loads mid-countdown (no previous state seen).
+            this._currentStateDuration = duration;
+            // use the browser's own clock, not last_changed, which breaks with device clock skew (issue #7)
             this._countdownStartTime = (this._previousAlarmState === undefined) ?
               new Date(entity.last_changed).getTime() : Date.now();
             this._showCountdownTimer(true);
@@ -327,10 +326,19 @@ class AlarmControlPanelCard extends HTMLElement {
       ${this._label("ui.card.alarm_control_panel." + state)}</button>`;
   }
 
+  _countdownDuration(entity) {
+    // per-state override (e.g. armed_home.arming) via the manual alarm's next_state/previous_state, else the flat default (issue #15)
+    const durations = this._config.durations;
+    if (!durations) return 0;
+    const armedState = (this._state == "arming") ?
+      entity.attributes.next_state : entity.attributes.previous_state;
+    return durations[armedState]?.[this._state] ?? durations[this._state] ?? 0;
+  }
+
   _doCountdownTimer() {
     const elapsedSeconds = (Date.now() - this._countdownStartTime) / 1000;
     const durationSeconds = this._currentStateDuration;
-    // clamp, so the ring can't wrap around and the text stays within 0..duration
+    // clamp, so the ring can't wrap around
     const elapsedPercent = Math.min(Math.max(elapsedSeconds / durationSeconds, 0), 1);
     const timeRemaining = Math.round(durationSeconds * (1 - elapsedPercent));
 
@@ -488,8 +496,7 @@ class AlarmControlPanelCard extends HTMLElement {
   _confirmEntitiesReady() {
     if (!this._config.confirm_entities) return true;
     for (var i = 0; i < this._config.confirm_entities.length; i++) {
-       // a missing entity (typo, removed device) counts as not ready, rather than throwing and
-       // stopping all card updates
+       // a missing entity counts as not ready, rather than throwing
        if (this.myhass.states[this._config.confirm_entities[i]]?.state != "off")
          return false;
     }

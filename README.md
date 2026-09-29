@@ -71,6 +71,37 @@ The card options are:
 
 * `entity`: (required string) the name of the manual `alarm_control_panel` entity
 * `show_countdown_timer`: (optional boolean). default false. set to true to show countdown timer, or false to hide it.  If enabled, you must also configure the `durations` list, specifying a duration in seconds for the arming, and pending states. These times should match the `arming_time` and `delay_time` in your `manual` alarm panel config (`configuration.yaml`).
+    * If your manual alarm config uses different `arming_time` or `delay_time` values for different armed states, you can add per-state overrides under `durations`, using the same state names. Any state without an override uses the default `arming`/`pending` values. For example, to match this manual alarm config:
+
+      ```yaml
+      # configuration.yaml
+      alarm_control_panel:
+        - platform: manual
+          armed_away:
+            arming_time: 60
+            delay_time: 30
+          armed_home:
+            arming_time: 0
+            delay_time: 0
+          armed_night:
+            arming_time: 10
+            delay_time: 15
+      ```
+
+      the card config would be:
+
+      ```yaml
+      durations:
+        arming: 60        # default (armed_away)
+        pending: 30
+        armed_night:      # overrides for armed_night
+          arming: 10
+          pending: 15
+      ```
+
+      States whose `arming_time` or `delay_time` is 0 never show a countdown, so they need no override.
+
+      The `manual` alarm reports which armed state is arming or pending, so the card can pick the right duration. Other alarm integrations may not, in which case only the defaults are used.
 * `scale`: (optional string). default is 14px. increase/decrease the size of the buttons/text/etc by changing this number
 * `title`: (optional string) if provided will show this title at the top of the card, and the alarm state will be below it. if not provided, will show the alarm state as the title (which saves some vertical space, if you are space constrained, like on a wall tablet)
 * `states`: (optional list). list of arming states to support. Default is `armed_away` and `armed_home`. If you use more than two, you may need to adjust the `.actions button` widths 
@@ -98,14 +129,14 @@ My config files are in the [ExampleConfig](https://github.com/jcooper-korg/Alarm
 	* label replacements to use shorter all-caps words for the AWAY, HOME, etc.
 	* `confirm_entities` list of sensors, so that it shows "Ready" if they're all off, or "Not ready" if any are on
 	* `disable_arm_if_not_ready` and `show_override_if_not_ready` both set, so the arm buttons are disabled unless all the `confirm_entities` are ready, or the override checkbox is checked
-	* countdown timer enabled and durations in seconds specified for arming (60) and pending (30) to match the `arming_time` and `delay_time` in the `armed_away` section of my `manual` alarm panel config (`configuration.yaml`)
+	* countdown timer enabled and durations in seconds specified for arming (60) and pending (30) to match the `arming_time` and `delay_time` in the `armed_away` section of my `manual` alarm panel config (`configuration.yaml`). (`armed_home` has zero times, so it never shows a countdown and needs no per-state override.)
 * I have set up automations to handle:
 	* turning on/off the green/red LEDs, beeper, and siren based on sensor entity states and the manual `alarm_control_panel` armed/disarmed/triggered state
 	* notifying our iphones when armed / disarmed or when triggered
 	* triggering the alarm on smoke sensors, regardless of arming state
 * In order to include the name of the entity that triggered the alarm in the trigger notifications, I'm using an `input_text` entity defined in my Home Assistant config (`configuration.yaml`), which is set when the alarm trigger automation runs, and is then referenced by the notification
 * In order to trigger the alarm immediately for some sensors (interior motion/glass-break, and smoke/CO) while entry doors keep their entry delay, I use a script called `trigger_alarm_immediately`. Because the manual component's `delay_time` is per-armed-state (not per-sensor), the script bounces through a zero-delay state to fire instantly: if the panel is already armed it switches to `armed_home` (whose `arming_time` and `delay_time` are both 0) and then triggers; if disarmed (e.g. smoke while home) it triggers directly. Using `armed_home` as the springboard means that when `trigger_time` expires the panel falls back to `armed_home` — still armed — rather than being left disarmed. (Trade-off: an `armed_away` trip downgrades to `armed_home` after a timeout.) This relies on `delay_time: 0` for both the `armed_home` and `disarmed` states in `configuration.yaml`.
-* I created a separate user named Alarm Panel that I use to log in from my wall mounted tablet. I'm using [Custom Header](https://maykar.github.io/custom-header) to hide the sidebar and title bar on the wall mounted tablet for that user.
+* I created a separate user named Alarm Panel that I use to log in from my wall mounted tablet.
 
 ## Credits
 
