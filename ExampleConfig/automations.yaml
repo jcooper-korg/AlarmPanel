@@ -157,253 +157,259 @@
   alias: Trigger Immediately when Arming
   description: While still arming, instant sensors fire immediately (no entry delay)
     via the trigger_alarm_immediately script.
-  trigger:
+  triggers:
   - entity_id: binary_sensor.office_window
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.living_room_window
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.kitchen_sink_window
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.kitchen_table_window
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.dining_room_window
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.master_bedroom_window
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.master_bath_window
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.bedroom1_window
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.bedroom2_window
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.side_garage_door
     from: 'off'
-    platform: state
     to: 'on'
-  condition:
+    trigger: state
+  conditions:
   - condition: state
     entity_id: alarm_control_panel.house
     state: arming
-  action:
-  - data_template:
+  actions:
+  - action: input_text.set_value
+    target:
       entity_id: input_text.trigger_source
+    data:
       value: '{{ trigger.to_state.attributes.friendly_name }}'
-    service: input_text.set_value
-  - data: {}
-    service: script.trigger_alarm_immediately
+  - action: script.trigger_alarm_immediately
+    data: {}
   mode: single
 - id: '1600468682227'
   alias: Trigger Immediately when Armed Home
   description: While armed_home, any door/window triggers immediately (armed_home
     has delay_time 0, so alarm_trigger fires with no pending).
-  trigger:
+  triggers:
   - entity_id: binary_sensor.office_window
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.living_room_window
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.kitchen_sink_window
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.kitchen_table_window
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.dining_room_window
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.master_bedroom_window
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.master_bath_window
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.bedroom1_window
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.bedroom2_window
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.side_garage_door
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.garage_door
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.front_door
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.back_door
     from: 'off'
-    platform: state
     to: 'on'
-  condition:
+    trigger: state
+  conditions:
   - condition: state
     entity_id: alarm_control_panel.house
     state: armed_home
-  action:
-  - data_template:
+  actions:
+  - action: input_text.set_value
+    target:
       entity_id: input_text.trigger_source
+    data:
       value: '{{ trigger.to_state.attributes.friendly_name }}'
-    service: input_text.set_value
-  - data: {}
-    entity_id: alarm_control_panel.house
-    service: alarm_control_panel.alarm_trigger
+  - action: alarm_control_panel.alarm_trigger
+    target:
+      entity_id: alarm_control_panel.house
+    data: {}
   mode: single
 - id: '1600468738107'
   alias: Trigger Immediately when Armed Away
   description: Interior sensors (motion, glass break) and windows fire immediately
     (no entry delay) via the trigger_alarm_immediately script.
-  trigger:
+  triggers:
   - entity_id: binary_sensor.office_window
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.living_room_window
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.kitchen_sink_window
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.kitchen_table_window
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.dining_room_window
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.master_bedroom_window
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.master_bath_window
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.bedroom1_window
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.bedroom2_window
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.side_garage_door
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.hall_motion
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.living_room_motion
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.glass_break_master_bath
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.glass_break_kitchen
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.glass_break_other
     from: 'off'
-    platform: state
     to: 'on'
-  condition:
+    trigger: state
+  conditions:
   - condition: state
     entity_id: alarm_control_panel.house
     state: armed_away
-  action:
-  - data_template:
+  actions:
+  - action: input_text.set_value
+    target:
       entity_id: input_text.trigger_source
+    data:
       value: '{{ trigger.to_state.attributes.friendly_name }}'
-    service: input_text.set_value
-  - data: {}
-    service: script.trigger_alarm_immediately
+  - action: script.trigger_alarm_immediately
+    data: {}
   mode: single
 - id: '1600468865168'
   alias: Trigger Immediately on Smoke
   description: Smoke/CO triggers immediately in ANY state (no condition) via the
     trigger_alarm_immediately script. If disarmed, the script triggers directly so
     the system returns to disarmed after trigger_time.
-  trigger:
+  triggers:
   - entity_id: binary_sensor.hall_smoke
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.carbon_monoxide_kitchen
     from: 'off'
-    platform: state
     to: 'on'
-  condition: []
-  action:
-  - data_template:
+    trigger: state
+  conditions: []
+  actions:
+  - action: input_text.set_value
+    target:
       entity_id: input_text.trigger_source
+    data:
       value: '{{ trigger.to_state.attributes.friendly_name }}'
-    service: input_text.set_value
-  - data: {}
-    service: script.trigger_alarm_immediately
+  - action: script.trigger_alarm_immediately
+    data: {}
   mode: single
 - id: '1600472249835'
   alias: Trigger Pending When Armed Away
   description: Entry doors while armed_away call alarm_trigger directly, so the panel
     uses armed_away's delay_time (30s pending) -- this is the entry delay, and it is
     what the card's countdown timer watches.
-  trigger:
+  triggers:
   - entity_id: binary_sensor.front_door
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.back_door
     from: 'off'
-    platform: state
     to: 'on'
+    trigger: state
   - entity_id: binary_sensor.garage_door
     from: 'off'
-    platform: state
     to: 'on'
-  condition:
+    trigger: state
+  conditions:
   - condition: state
     entity_id: alarm_control_panel.house
     state: armed_away
-  action:
-  - data: {}
-    entity_id: alarm_control_panel.house
-    service: alarm_control_panel.alarm_trigger
+  actions:
+  - action: alarm_control_panel.alarm_trigger
+    target:
+      entity_id: alarm_control_panel.house
+    data: {}
   mode: single

@@ -1,10 +1,3 @@
-custom_header:
-  compact_mode: true
-  exceptions:
-    - conditions:
-        user: Alarm Panel
-      config:
-        kiosk_mode: true # hide side bar and menu bar
 views:
   - badges: []
     cards:
@@ -42,7 +35,7 @@ views:
         auto_enter:
           code_length: 4
           arm_action: arm_away
-        type: 'custom:alarm_control_panel-card'
+        type: custom:alarm_control_panel-card
       - card:
           entities:
             - binary_sensor.office_window
