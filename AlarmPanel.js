@@ -185,27 +185,7 @@ class AlarmControlPanelCard extends HTMLElement {
     root.getElementById("arm-actions").style.display = armVisible ? "" : "none";
     // disarm-actions is in the keypad, or in the actions row when there's no keypad
     root.getElementById("disarm-actions").style.display = armVisible ? "none" : "";
-    
-    if (config.auto_enter) {
-      if (armVisible) {
-        if (!config.confirm_entities || !config.disable_arm_if_not_ready || this._entitiesReady)
-          this._autoarm_action = config.auto_enter.arm_action;
-        else
-          this._autoarm_action = "disabled";
-        root.querySelectorAll(".actions button").forEach(element => {
-        element.classList.remove('autoarm');
-        if (element.id === this._autoarm_action)
-          element.classList.add('autoarm');
-        })
-        root.getElementById("disarm").classList.remove('autoarm');
-      }
-      else
-      {
-          this._autoarm_action = 'disarm';
-          root.getElementById("disarm").classList.add('autoarm');
-      }
-    }
-    
+
     // hide code and number pad if disarmed, if manual alarm config has code_arm_required=false
     if (!this.code_arm_required) {
       if (this._hasKeypad()) {
@@ -273,8 +253,32 @@ class AlarmControlPanelCard extends HTMLElement {
     } else {
       card.header = status;
     }
+
+    this._updateAutoEnter();
   }
-  
+
+  _updateAutoEnter() {
+    // same rule as the arm buttons: disabled when not ready, unless the override is checked
+    const config = this._config;
+    const root = this.shadowRoot;
+    if (!config.auto_enter) return;
+
+    if (this._state === 'disarmed') {
+      const armAllowed = !config.confirm_entities || !config.disable_arm_if_not_ready || this._entitiesReady ||
+        root.getElementById("overrideCheckbox").checked;
+      this._autoarm_action = armAllowed ? config.auto_enter.arm_action : "disabled";
+      root.querySelectorAll(".actions button").forEach(element => {
+        element.classList.remove('autoarm');
+        if (element.id === this._autoarm_action)
+          element.classList.add('autoarm');
+      })
+      root.getElementById("disarm").classList.remove('autoarm');
+    } else {
+      this._autoarm_action = 'disarm';
+      root.getElementById("disarm").classList.add('autoarm');
+    }
+  }
+
   _updateLabels() {
     const root = this.shadowRoot;
     root.querySelectorAll("#arm-actions button, button#disarm").forEach(element => {
