@@ -299,7 +299,7 @@ class AlarmControlPanelCard extends HTMLElement {
         ${this._config.states.map(el => `${this._actionButton(el)}`).join('')}
       </div>
       ${disarmButtonIfHideKeypad}
-      <div id="override-option" class="override"><input name="Override" id="overrideCheckbox" type="checkbox" /><label id="overrideLabel" for="override">Override</label></div>`
+      <div id="override-option" class="override"><input name="Override" id="overrideCheckbox" type="checkbox" /><label id="overrideLabel" for="overrideCheckbox">Override</label></div>`
   }
 
   _stateIconLabel(state) {
