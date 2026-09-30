@@ -48,8 +48,14 @@ class AlarmControlPanelCard extends HTMLElement {
       this.has_numeric_code = !entity.attributes.code_format || entity.attributes.code_format == "number";
       if(!this._card) {
         this._createCard(entity);
+      } else if (hass.localize !== this._localize || hass.formatEntityState !== this._formatEntityState) {
+        // translations loaded after the card was built, or the language changed
+        this._updateLabels();
+        this._updateReady();
       }
-      
+      this._localize = hass.localize;
+      this._formatEntityState = hass.formatEntityState;
+
       const updatedEntitiesReady = this._confirmEntitiesReady();
       if (entity.state != this._state || this._entitiesReady != updatedEntitiesReady) {
         this._previousAlarmState = this._state;
@@ -75,9 +81,7 @@ class AlarmControlPanelCard extends HTMLElement {
     content.style.display = config.auto_hide ? 'none' : '';
     content.innerHTML = `
       ${this._actionButtons()}
-      ${this.has_numeric_code ?
-          `<ha-input id="input-code" label='${this._label("ui.card.alarm_control_panel.code")}'
-          type="password"></ha-input>` : ''}
+      ${this.has_numeric_code ? '<ha-input id="input-code" type="password"></ha-input>' : ''}
       ${this._keypad(entity)}
     `;
 
@@ -86,6 +90,7 @@ class AlarmControlPanelCard extends HTMLElement {
     this.shadowRoot.appendChild(card);
     // not shadowRoot.lastChild, since other mods (e.g. browser_mod) may append to our shadowRoot (issue #22)
     this._card = card;
+    this._updateLabels();   // sets the code field label (as a property, so any quotes in a translation are safe)
     this._showCountdownTimer(false); // start hidden
 
     this._setupInput();
@@ -231,8 +236,9 @@ class AlarmControlPanelCard extends HTMLElement {
     const card = this._card;
     const config = this._config;
   
-    const state_str = "state.alarm_control_panel." + this._state;
-    let status = this._label(state_str);
+    const entity = this.myhass.states[this._config.entity];
+    let status = this._label("state.alarm_control_panel." + this._state,
+      entity && this.myhass.formatEntityState?.(entity));
    
     var showOverrideCheckbox = false;
     if (config.confirm_entities && this._state === "disarmed") {
@@ -272,6 +278,17 @@ class AlarmControlPanelCard extends HTMLElement {
     }
   }
   
+  _updateLabels() {
+    const root = this.shadowRoot;
+    root.querySelectorAll("#arm-actions button, button#disarm").forEach(element => {
+      element.textContent = this._label("ui.card.alarm_control_panel." + element.id);
+    });
+    const clear = root.getElementById("keyclear");
+    if (clear) clear.textContent = this._label("ui.card.alarm_control_panel.clear_code");
+    const input = this._card.querySelector("ha-input");
+    if (input) input.label = this._label("ui.card.alarm_control_panel.code");
+  }
+
   _actionButtons() {
     let disarmButtonIfHideKeypad = '';
     if (this._config.hide_keypad) {
@@ -770,9 +787,9 @@ class AlarmControlPanelCard extends HTMLElement {
     if (this._config.labels && this._config.labels[label])
       return this._config.labels[label];
 
-    const lang = this.myhass?.selectedLanguage || this.myhass?.language || "en";
-    const translations = this.myhass?.resources?.[lang];
-    if (translations && translations[label]) return translations[label];
+    // hass.localize returns "" for unknown keys (hass.resources, used before, no longer exists)
+    const translation = this.myhass?.localize?.(label);
+    if (translation) return translation;
 
     if (default_label) return default_label;
 
