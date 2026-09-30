@@ -183,9 +183,8 @@ class AlarmControlPanelCard extends HTMLElement {
 
     const armVisible = (this._state === 'disarmed');
     root.getElementById("arm-actions").style.display = armVisible ? "" : "none";
-    if (this._hasKeypad()) {
-        root.getElementById("disarm-actions").style.display = armVisible ? "none" : "";
-    }
+    // disarm-actions is in the keypad, or in the actions row when there's no keypad
+    root.getElementById("disarm-actions").style.display = armVisible ? "none" : "";
     
     if (config.auto_enter) {
       if (armVisible) {
