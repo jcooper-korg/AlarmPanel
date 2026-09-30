@@ -564,7 +564,7 @@ class AlarmControlPanelCard extends HTMLElement {
       ha-label-badge-icon {
         --ha-label-badge-color: var(--alarm-state-color);
         --label-badge-text-color: var(--alarm-state-color);
-        --label-badge-background-color: var(--paper-card-background-color);
+        --label-badge-background-color: var(--ha-card-background, var(--card-background-color));
         position: absolute;
         right: 12px;
         top: 12px;
