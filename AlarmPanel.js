@@ -764,7 +764,9 @@ class AlarmControlPanelCard extends HTMLElement {
   }
 
   getCardSize() {
-    return 1;
+    // masonry reads this once, so it can't follow the keypad showing/hiding. use the disarmed size
+    // (roughly; units are 50px), which also keeps the next card stacking below this one (columns fill to 5)
+    return 4;
   }
 }
 
