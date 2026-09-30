@@ -81,7 +81,7 @@ class AlarmControlPanelCard extends HTMLElement {
     content.style.display = config.auto_hide ? 'none' : '';
     content.innerHTML = `
       ${this._actionButtons()}
-      ${this.has_numeric_code ? '<ha-input id="input-code" type="password"></ha-input>' : ''}
+      <ha-input id="input-code" type="password"></ha-input>
       ${this._keypad(entity)}
     `;
 
@@ -183,7 +183,7 @@ class AlarmControlPanelCard extends HTMLElement {
 
     const armVisible = (this._state === 'disarmed');
     root.getElementById("arm-actions").style.display = armVisible ? "" : "none";
-    if (!config.hide_keypad && this.has_numeric_code) {
+    if (this._hasKeypad()) {
         root.getElementById("disarm-actions").style.display = armVisible ? "none" : "";
     }
     
@@ -209,12 +209,10 @@ class AlarmControlPanelCard extends HTMLElement {
     
     // hide code and number pad if disarmed, if manual alarm config has code_arm_required=false
     if (!this.code_arm_required) {
-      if (!config.hide_keypad) {
+      if (this._hasKeypad()) {
         root.getElementById("keypad").style.display = armVisible ? "none" : "flex";
       }
-      if (this.has_numeric_code) {
-        root.getElementById("input-code").style.display = armVisible ? "none" : "";
-      }
+      root.getElementById("input-code").style.display = armVisible ? "none" : "";
     }
   }
   
@@ -290,15 +288,15 @@ class AlarmControlPanelCard extends HTMLElement {
   }
 
   _actionButtons() {
-    let disarmButtonIfHideKeypad = '';
-    if (this._config.hide_keypad) {
-      disarmButtonIfHideKeypad = `<div id="disarm-actions" class="actions">${this._actionButton('disarm')}</div>`;
+    let disarmButtonIfNoKeypad = '';
+    if (!this._hasKeypad()) {
+      disarmButtonIfNoKeypad = `<div id="disarm-actions" class="actions">${this._actionButton('disarm')}</div>`;
     }
     return `
       <div id="arm-actions" class="actions">
         ${this._config.states.map(el => `${this._actionButton(el)}`).join('')}
       </div>
-      ${disarmButtonIfHideKeypad}
+      ${disarmButtonIfNoKeypad}
       <div id="override-option" class="override"><input name="Override" id="overrideCheckbox" type="checkbox" /><label id="overrideLabel" for="overrideCheckbox">Override</label></div>`
   }
 
@@ -488,8 +486,13 @@ class AlarmControlPanelCard extends HTMLElement {
     }
   }
 
+  _hasKeypad() {
+    // numeric codes only; a text code is typed into the code field, with the disarm button in the actions row
+    return !this._config.hide_keypad && this.has_numeric_code;
+  }
+
   _keypad(entity) {
-    if (this._config.hide_keypad || !this.has_numeric_code) return '';
+    if (!this._hasKeypad()) return '';
 
     return `
       <div id="keypad" class="pad">
