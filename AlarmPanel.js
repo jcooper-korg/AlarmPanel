@@ -13,8 +13,8 @@
 // if show_countdown_timer is enabled, then the config should specify a list of durations (in seconds) for the arming and pending states,
 // optionally with per-armed-state overrides (e.g. durations.armed_home.arming) to match the manual alarm's per-state config
 //
-// if alarm_control_panel.code_arm_required is set, the keypad will be shown when disarmed, regardless of the
-// hide_keypad and auto_hide options.
+// if alarm_control_panel.code_arm_required is set, the code field (and keypad, unless hide_keypad) is also shown
+// when disarmed, so a code can be entered to arm.
 
 class AlarmControlPanelCard extends HTMLElement {
   constructor() {
@@ -96,9 +96,6 @@ class AlarmControlPanelCard extends HTMLElement {
     this._setupInput();
     this._setupKeypad();
     this._setupActions();
-  }
-
-  connectedCallback() {
   }
 
   setConfig(config) {
@@ -387,7 +384,6 @@ class AlarmControlPanelCard extends HTMLElement {
     // draw text label
     const fontSize = this._timerRadius/1.2;
     ctx.font = "700 " + fontSize + "px sans-serif";
-    ctx.lineWidth = this._strokeWidth;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillStyle  = "white";
@@ -552,7 +548,7 @@ class AlarmControlPanelCard extends HTMLElement {
         --alarm-color-autoarm: rgba(0, 153, 255, .1);
         --alarm-state-color: var(--alarm-color-armed);
         --base-unit: ${this._config.scale};
-        font-size: calc(var(--base-unit));
+        font-size: var(--base-unit);
         ${icon_style}
       }
       ha-icon {
@@ -569,7 +565,6 @@ class AlarmControlPanelCard extends HTMLElement {
         --ha-label-badge-color: var(--alarm-state-color);
         --label-badge-text-color: var(--alarm-state-color);
         --label-badge-background-color: var(--paper-card-background-color);
-        color: var(--alarm-state-color);
         position: absolute;
         right: 12px;
         top: 12px;
@@ -593,16 +588,12 @@ class AlarmControlPanelCard extends HTMLElement {
         color: var(--label-badge-text-color, rgb(76, 76, 76));
         white-space: nowrap;
         background-color: var(--label-badge-background-color, white);
-        background-size: cover;
         transition: border 0.3s ease-in-out;
       }
       .label-badge .value {
         font-size: 90%;
         overflow: hidden;
         text-overflow: ellipsis;
-      }
-      .label-badge .value.big {
-        font-size: 70%;
       }
       .label-badge .label {
         position: absolute;
@@ -620,10 +611,9 @@ class AlarmControlPanelCard extends HTMLElement {
         background-color: var(--ha-label-badge-color, var(--primary-color));
         color: var(--ha-label-badge-label-color, white);
         border-radius: 1em;
-        padding: 9% 16% 8% 16%; /* mostly apitalized text, not much descenders => bit more top margin */
+        padding: 9% 16% 8% 16%; /* mostly capitalized text, not much descenders => bit more top margin */
         font-weight: 500;
         overflow: hidden;
-        text-transform: uppercase;
         text-overflow: ellipsis;
         transition: background-color 0.3s ease-in-out;
         text-transform: var(--ha-label-badge-label-text-transform, uppercase);
@@ -632,39 +622,18 @@ class AlarmControlPanelCard extends HTMLElement {
         font-size: 90%;
         padding: 10% 12% 7% 12%; /* push smaller text a bit down to center vertically */
       }
-      .badge-container .title {
-        margin-top: 1em;
-        font-size: var(--ha-label-badge-title-font-size, 0.9em);
-        width: var(--ha-label-badge-title-width, 5em);
-        font-weight: var(--ha-label-badge-title-font-weight, 400);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        line-height: normal;
-      }
       .disarmed {
         --alarm-state-color: var(--alarm-color-disarmed);
       }
       .triggered {
         --alarm-state-color: var(--alarm-color-triggered);
-        animation: pulse 1s infinite;
       }
       .arming {
         --alarm-state-color: var(--alarm-color-pending);
-        animation: pulse 1s infinite;
       }
       .pending {
         --alarm-state-color: var(--alarm-color-pending);
-        animation: pulse 1s infinite;
       }
-//      @keyframes pulse {
-//        0% {
-//          --ha-label-badge-color: var(--alarm-state-color);
-//        }
-//        100% {
-//          --ha-label-badge-color: rgba(255, 153, 0, 0.3);
-//        }
-//      }
-
       ha-input {
         display: block;
         text-align: center;
@@ -685,11 +654,10 @@ class AlarmControlPanelCard extends HTMLElement {
       }
       .state {
         margin-left: 20px;
-        font-size: calc(var(--base-unit) * 1);
+        font-size: var(--base-unit);
         position: relative;
         bottom: 16px;
         color: var(--alarm-state-color);
-        animation: none;
       }
       .pad {
         display: flex;
@@ -712,13 +680,8 @@ class AlarmControlPanelCard extends HTMLElement {
         border-style: solid;
         border-color: var(--primary-color);
         border-radius: 4px;
-        #color: var(--primary-color);
         color: var(--primary-text-color);
       }
-      .pad .autoarm {
-        background: var(--alarm-color-autoarm) !important;
-      }
-
       .pad button:focus {
         border-color: var(--dark-primary-color);
         outline: none;
@@ -738,7 +701,7 @@ class AlarmControlPanelCard extends HTMLElement {
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
-        font-size: calc(var(--base-unit) * 1);
+        font-size: var(--base-unit);
       }
       .override {
         margin-top: 12px;
@@ -763,16 +726,12 @@ class AlarmControlPanelCard extends HTMLElement {
         background-color: var(--primary-color);
         color: var(--primary-text-color);
       }
-      button:disabled,
-      button[disabled] {
+      button:disabled {
         background-color: #cccccc;
         color: #666666;
       }
-      .actions .autoarm {
+      .autoarm {
         background: var(--alarm-color-autoarm) !important;
-      }
-      button#disarm {
-        color: var(--google-red-500);
       }
       .alpha {
         position: absolute;
