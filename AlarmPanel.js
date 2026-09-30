@@ -121,10 +121,14 @@ class AlarmControlPanelCard extends HTMLElement {
     if (!this._config.states) this._config.states = ['arm_away', 'arm_home'];
     if (!this._config.scale) this._config.scale = '15px';
 
+    // rebuild from scratch: stop any countdown, and forget the state so the new card gets fully updated
+    this._stopCountdownTimer();
+    this._state = undefined;
     if (this._card) {
       this._card.remove();
       this._card = null;
     }
+    if (this.myhass) this.hass = this.myhass;   // rebuild now, rather than waiting for the next hass update
   }
 
   _updateCardContent(entity) {
